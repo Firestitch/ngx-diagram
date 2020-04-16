@@ -1,0 +1,20 @@
+<div class="example-title">{{title}}</div>
+<mat-tab-group>
+  <mat-tab label="Examples">
+    <div class="example-container">
+      <ul class="examples-list" *ngIf="examples.length > 1">
+        <li *ngFor="let example of examples">
+          <a href="javascript:;" (click)="scrollTo(example)">{{example.title}}</a>
+        </li>
+      </ul>
+      <div class="examples-body">
+        <ng-content></ng-content>
+      </div>
+    </div>
+  </mat-tab>
+  <mat-tab label="Docs" *ngIf="loaded">
+    <div class="iframe-container">
+      <iframe class="iframe-example ng-star-inserted" [src]="submoduleUrl"></iframe>
+    </div>
+  </mat-tab>
+</mat-tab-group>

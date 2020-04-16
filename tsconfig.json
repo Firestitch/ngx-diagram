@@ -1,0 +1,10 @@
+{
+  "extends": "./tools/config/tsconfig.cli.json",
+  "compilerOptions": {
+    "paths": {
+      "@firestitch/package": [
+        "src/public_api.ts"
+      ]
+    }
+  }
+}

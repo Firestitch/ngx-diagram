@@ -1,0 +1,98 @@
+@import '~@angular/material/theming';
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue.
+$primary-color: mat-palette($mat-blue);
+$accent-color:  mat-palette($mat-amber, A200, A100, A400);
+
+// The warn palette is optional (defaults to red).
+$app-warn:    mat-palette($mat-red);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$app-theme: mat-light-theme($primary-color, $accent-color, $app-warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($app-theme);
+
+a {
+  color: mat-color($primary-color);
+  text-decoration: none;
+}
+
+@import url(https://fonts.googleapis.com/icon?family=Material+Icons|Roboto);
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    margin: 0;
+}
+
+app-root {
+  padding: 30px;
+  box-sizing: border-box;
+  height: 100%;
+  display: block;
+}
+
+iframe.iframe-example {
+  width: 100%;
+  border: 0px;
+  height: 3000px;
+  width: 100%;
+}
+
+
+fieldset {
+  margin: 0;
+  margin-top: 20px;
+  border: 1px solid #cfcfcf;
+  border-radius: 2px;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+
+table.table {
+  border-spacing: 0px;
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #f5f5f5;
+
+  th {
+    padding: 10px;
+    background: #F5F5F5;
+  }
+
+  td {
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+fs-example:first-child {
+  padding-top: 0;
+}
+
+@media (max-width: 599px) {
+
+  app-root {
+    padding: 12px;
+  }
+
+  .examples {
+    padding: 12px 8px !important;
+  }
+
+  .examples-h1 {
+    font-size: 23px !important;
+    margin-bottom: 10px !important;
+  }
+}

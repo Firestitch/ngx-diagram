@@ -1,0 +1,128 @@
+.fs-diagram {
+  position: relative;
+  display: block;
+  user-select: none;
+}
+
+.fs-diagram-object {
+  position: absolute;
+  cursor: pointer;
+  z-index: 8;
+  user-select: text;
+
+  .fs-diagram-source {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #cfcfcf;
+    border-radius: 50%;
+    display: none;
+    cursor: pointer;
+
+    &.north,
+    &.north-east,
+    &.north-west {
+      top: -5px;
+    }
+
+    &.east,
+    &.west {
+      bottom: calc(50% - 5px);
+    }
+
+    &.north,
+    &.south {
+      left: calc(50% - 5px);
+    }
+
+    &.east,
+    &.north-east,
+    &.south-east {
+      right: -5px;
+    }
+
+    &.west,
+    &.north-west,
+    &.south-west {
+      left: -5px;
+    }
+
+    &.south,
+    &.south-east,
+    &.south-west {
+      bottom: -5px;
+    }
+  }
+
+  &:hover:not(.jtk-drag):not(.jtk-drag-hover) .fs-diagram-source {
+    display: block;
+  }
+
+  &.draggable {
+    &:active,
+    &.jtk-drag-hover {
+      z-index: 99;
+      box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+                  0 8px 10px 1px rgba(0, 0, 0, 0.14),
+                  0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    }
+  }
+}
+
+.fs-diagram-connection-label {
+  background: #fff;
+  padding: 0 5px;
+  z-index: 7;
+  border-radius: 2px;
+  font-size: 90%;
+  color: #555;
+}
+
+.fs-diagram-connection.fs-diagram-clickable path,
+.fs-diagram-connection-label.fs-diagram-clickable {
+  cursor: pointer;
+}
+
+.fs-diagram-connection-tooltip-overlay {
+  z-index: 9999;
+}
+
+.fs-diagram-connection-label-tooltip,
+.fs-diagram-connection-tooltip {
+    transform-origin: center top 0px;
+    transform: scale(1);
+    color: #fff;
+    border-radius: 4px;
+    max-width: 250px;
+    padding: 6px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #707070;
+    font-size: 80%;
+    display: none;
+    position: absolute;
+    white-space: pre;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+
+    &.show {
+      display: block;
+    }
+
+    &:hover {
+      display: block;
+    }
+}
+
+.fs-diagram-connection-tooltip {
+  top: -13px;
+}
+
+.fs-diagram-connection-label-tooltip {
+  top: 18px;
+}
+
+.fs-diagram-connection-label:hover .fs-diagram-connection-label-tooltip {
+  display: block;
+}

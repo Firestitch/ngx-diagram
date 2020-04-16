@@ -1,0 +1,38 @@
+::ng-deep {
+
+  .fs-diagram {
+    height: 600px;
+    border: 1px solid #efefef;
+    overflow: hidden;
+  }
+
+  .fs-diagram-object {
+    border: 2px solid #2196F3;
+    background: #fff;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    line-height: 100px;
+    border-radius: 3px;
+    font-size: 17px;
+
+    .fs-diagram-source {
+      background: #2196F3;
+    }
+
+    .buttons {
+      position: absolute;
+      top: 0;
+      right: 0;
+      line-height: normal;
+    }
+  }
+
+  .start-object {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+  }
+}
+
+
