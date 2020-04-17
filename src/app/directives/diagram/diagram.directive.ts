@@ -1,6 +1,3 @@
-import { ConnectionActor, PointShape } from '../../helpers/enums';
-import { ConnectionCreated } from '../../interfaces/connection-created';
-import { DiagramConnection } from '../../classes/diagram-connection';
 import {
   AfterViewInit,
   ContentChildren,
@@ -13,21 +10,26 @@ import {
   Output,
   QueryList,
   Input,
-  HostBinding
+  HostBinding,
+  NgZone
 } from '@angular/core';
 
-import { Subject, zip, Observable, forkJoin } from 'rxjs';
+import { Subject, Observable, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { FsDiagramObjectDirective } from '../diagram-object/diagram-object.directive';
 import { ConnectionConfig } from '../../interfaces';
 import { ConnectorType } from '../../helpers';
 import { DiagramConfig } from '../../interfaces/diagram-config';
-import { jsPlumb } from 'jsplumb';
+import { DiagramService } from './../../services';
+import { ConnectionActor, PointShape } from '../../helpers/enums';
+import { ConnectionCreated } from '../../interfaces/connection-created';
+import { DiagramConnection } from '../../classes/diagram-connection';
 
 
 @Directive({
-  selector: '[fsDiagram]'
+  selector: '[fsDiagram]',
+  providers: [DiagramService]
 })
 export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
@@ -42,11 +44,12 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
   private _connects = [];
   private _differ;
-  private _jsPlumb = null;
-  private _diagramObjects = new Map<any, FsDiagramObjectDirective>();
   private _destroy$ = new Subject<void>();
 
-  constructor(private _element: ElementRef, private differs: IterableDiffers) {
+  constructor(private _element: ElementRef,
+              private differs: IterableDiffers,
+              private _ngZone: NgZone,
+              private _diagramService: DiagramService) {
     this._differ = this.differs.find([]).create(null);
   }
 
@@ -54,17 +57,19 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
     this._initConfig();
 
-    this._jsPlumb = jsPlumb.getInstance();
-    this._jsPlumb.bind('connection', (info: any, e: Event) => {
+    this._diagramService.diagramConfig = this.config;
+
+    this.jsPlumb.bind('connection', (info: any, e: Event) => {
 
       if (e && e.defaultPrevented) {
         return;
       }
 
       if (info.connection.target && info.connection.source) {
+
         setTimeout(() => {
 
-          const connection = new DiagramConnection(this, info.connection, info.connection.config);
+          const connection = new DiagramConnection(this._diagramService, info.connection, info.connection.config);
           connection.render();
 
           const event: ConnectionCreated = {
@@ -102,7 +107,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       ]
     };
 
-    this._jsPlumb.importDefaults(config);
+    this.jsPlumb.importDefaults(config);
   }
 
   get element(): ElementRef {
@@ -110,11 +115,11 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   }
 
   get jsPlumb() {
-    return this._jsPlumb;
+    return this._diagramService.jsPlumb;
   }
 
   public ngOnDestroy() {
-    this._jsPlumb.reset();
+    this.jsPlumb.reset();
     this._destroy$.next();
     this._destroy$.complete();
   }
@@ -157,6 +162,47 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       });
   }
 
+  public suspendRendering(func) {
+    this.jsPlumb.setSuspendDrawing(true);
+    func();
+    this.jsPlumb.setSuspendDrawing(false, true);
+  }
+
+  public connect(source: any, target: any, config: ConnectionConfig = {}) {
+
+    const sourceDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(source);
+    const targetDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(target);
+
+    if (!sourceDiagram || !sourceDiagram.initalized$.getValue() ||
+        !targetDiagram || !targetDiagram.initalized$.getValue()) {
+      this._connects.push({ source: source, target: target, config: config });
+      return;
+    }
+
+    const connection = this.jsPlumb.connect({
+      source: sourceDiagram.element.nativeElement,
+      target: targetDiagram.element.nativeElement
+    });
+
+    connection.config = config;
+  }
+
+  public getConnection(source?: object, target?: object, name?: string): DiagramConnection {
+    return this._diagramService.getConnection(source, target, name);
+  }
+
+  public getConnections(source?: object, target?: object, name?: string): DiagramConnection[] {
+    return this._diagramService.getConnections(source, target, name);
+  }
+
+  public repaint() {
+    this.jsPlumb.repaintEverything();
+  }
+
+  public getDiagramObject(data: any): FsDiagramObjectDirective {
+    return this._diagramService.diagramObjects.get(data);
+  }
+
   private _processObjectDirectives(initalizedDirectives$, connects) {
 
     this.suspendRendering(() => {
@@ -174,117 +220,25 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
-  public suspendRendering(func) {
-    this._jsPlumb.setSuspendDrawing(true);
-    func();
-    this._jsPlumb.setSuspendDrawing(false, true);
-  }
-
-  public connect(source: any, target: any, config: ConnectionConfig = {}) {
-
-    const sourceDiagram: FsDiagramObjectDirective = this._diagramObjects.get(source);
-    const targetDiagram: FsDiagramObjectDirective = this._diagramObjects.get(target);
-
-    if (!sourceDiagram || !sourceDiagram.initalized$.getValue() ||
-        !targetDiagram || !targetDiagram.initalized$.getValue()) {
-      this._connects.push({ source: source, target: target, config: config });
-      return;
-    }
-
-    const connection = this._jsPlumb.connect({
-      source: sourceDiagram.element.nativeElement,
-      target: targetDiagram.element.nativeElement
-    });
-
-    connection.config = config;
-  }
-
   private _connect(source: any, target: any, config: ConnectionConfig = {}) {
 
-    const sourceDiagram: FsDiagramObjectDirective = this._diagramObjects.get(source);
-    const targetDiagram: FsDiagramObjectDirective = this._diagramObjects.get(target);
+    const sourceDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(source);
+    const targetDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(target);
 
-    const connection = this._jsPlumb.connect({
+    const connection = this.jsPlumb.connect({
       source: sourceDiagram.element.nativeElement,
       target: targetDiagram.element.nativeElement
     });
 
     connection.config = config;
-  }
-
-  public getConnection(source?: object, target?: object, name?: string): DiagramConnection {
-    return this.getConnections(source, target, name)[0];
-  }
-
-  public getConnections(source?: object, target?: object, name?: string): DiagramConnection[] {
-
-    let connections = []
-    if (target || source) {
-
-      name = name || '*';
-
-      const sourceDiagram = source ? this._diagramObjects.get(source) : null;
-      const targetDiagram = target ? this._diagramObjects.get(target) : null;
-
-      if (targetDiagram && sourceDiagram) {
-        connections = this._jsPlumb.getConnections({
-          source: sourceDiagram.element.nativeElement,
-          target: targetDiagram.element.nativeElement,
-          scope: name
-        });
-
-        } else if (sourceDiagram) {
-          connections = this._jsPlumb.getConnections({
-            source: sourceDiagram.element.nativeElement,
-            scope: name
-          });
-
-        } else if (targetDiagram) {
-          connections = this._jsPlumb.getConnections({
-            target: targetDiagram.element.nativeElement,
-            scope: name
-          });
-        }
-
-    } else if (name) {
-      connections = this._jsPlumb.getConnections({
-        scope: name
-      });
-    } else {
-      connections = this._jsPlumb.getAllConnections();
-    }
-
-    return connections.map(connection => {
-      const config = (connection.getData() || {})['connection-config'];
-      return new DiagramConnection(this, connection, config);
-    });
-  }
-
-  public repaint() {
-    this.jsPlumb.repaintEverything();
-  }
-
-  public getDiagramObjectDirective(data: any): FsDiagramObjectDirective {
-    return this._diagramObjects.get(data);
   }
 
   private _addDiagramObject(directive: FsDiagramObjectDirective) {
-    directive.init(this._jsPlumb, this);
-    this._diagramObjects.set(directive.data, directive);
+    this._diagramService.diagramObjects.set(directive.data, directive);
   }
 
   private _removeDiagramObject(diagramObject: FsDiagramObjectDirective) {
-
-    this._jsPlumb.getConnections({
-      source: diagramObject.element.nativeElement
-    }).concat(this._jsPlumb.getConnections({
-      target: diagramObject.element.nativeElement
-    }))
-      .forEach(connection => {
-        this._jsPlumb.deleteConnection(connection);
-      });
-
-    this._diagramObjects.delete(diagramObject.data);
+    this._diagramService.diagramObjects.delete(diagramObject.data);
   }
 
   private _initConfig() {

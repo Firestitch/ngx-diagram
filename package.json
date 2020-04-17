@@ -2,7 +2,7 @@
   "name": "@firestitch/diagram",
   "title": "Diagram",
   "description": "@firestitch/diagram",
-  "version": "7.0.8",
+  "version": "7.0.12",
   "repository": {
     "type": "git",
     "url": "https://github.com/Firestitch/ngx-diagram"
@@ -47,6 +47,7 @@
     "@firestitch/prompt": "^0.2.0",
     "@firestitch/common": "^7.0.0",
     "@firestitch/menu": "^7.0.10",
+    "@firestitch/zoom-pan": "^7.0.3",
     "lodash-es": "^4.17.11",
     "codelyzer": "^4.5.0",
     "cpx": "^1.5.0",

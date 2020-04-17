@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FsExampleModule } from '@firestitch/example';
 import { FsMessageModule } from '@firestitch/message';
 import { FsDiagramModule } from '@firestitch/package';
+import { FsZoomPanModule } from '@firestitch/zoom-pan';
 import { FsPromptModule } from '@firestitch/prompt';
 import { FsMenuModule } from '@firestitch/menu';
 
@@ -28,6 +29,7 @@ const routes: Routes = [
     BrowserAnimationsModule,
     AppMaterialModule,
     FormsModule,
+    FsZoomPanModule,
     FsPromptModule.forRoot(),
     FsExampleModule.forRoot(),
     FsMessageModule.forRoot(),

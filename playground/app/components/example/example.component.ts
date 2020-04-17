@@ -23,7 +23,6 @@ export class ExampleComponent implements OnInit {
   public startObject = {};
   public diagramConfig: DiagramConfig = {
     paintStyle: {
-      straightdashstyle: '2 2'
     }
   };
 
@@ -34,7 +33,7 @@ export class ExampleComponent implements OnInit {
     this.diagramConfig = {}
 
     setTimeout(() => {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 15; i++) {
         this.add();
       }
 
@@ -106,8 +105,8 @@ export class ExampleComponent implements OnInit {
     });
   }
 
-  public repaint(object) {
-    const directive = this.diagram.getDiagramObjectDirective(object);
+  public repaint(data) {
+    const directive = this.diagram.getDiagramObject(data);
     if (directive) {
       directive.repaint();
     }

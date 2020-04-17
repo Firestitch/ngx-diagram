@@ -1,20 +1,30 @@
+import { DiagramService } from './../services/diagram.service';
+import { DiagramConfig } from './../interfaces/diagram-config';
 import { ConnectorArchConfig, ConnectorElbowConfig, ConnectorCurveConfig, ConnectorStraightConfig } from './../interfaces/connector-config';
 import { forOwn } from 'lodash-es';
-import { FsDiagramDirective } from '../directives/diagram/diagram.directive';
 import { ConnectionEvent, ConnectionLabelConfig } from '../interfaces/connection-config';
 import { ConnectionOverlayType } from '../helpers/enums';
 import { ConnectionConfig } from '../interfaces';
-
+import { NgZone } from '@angular/core';
 
 export class DiagramConnection {
 
   public connection;
-  private _diagram;
+  private _jsPlumb;
+  private _diagramConfig: DiagramConfig;
   private _config: ConnectionConfig = {};
+  private _ngZone: NgZone;
+  private _diagramService: DiagramService;
 
-  public constructor(diagram: FsDiagramDirective, connection, config?: ConnectionConfig) {
-    this._diagram = diagram;
+  public constructor( diagramService: DiagramService,
+                      connection,
+                      config?: ConnectionConfig) {
+
+    this._jsPlumb = diagramService.jsPlumb;
+    this._diagramService = diagramService;
+    this._diagramConfig = diagramService.diagramConfig;
     this.connection = connection;
+    this._ngZone = diagramService.ngZone;
 
     if (config) {
       this.config = config || {};
@@ -45,7 +55,7 @@ export class DiagramConnection {
 
   public setConnector(connector:  ConnectorArchConfig | ConnectorElbowConfig |
                                   ConnectorCurveConfig | ConnectorStraightConfig) {
-    connector = Object.assign({}, this._diagram.config.connector, connector);
+    connector = Object.assign({}, this._diagramConfig.connector, connector);
     this.connection.setConnector([connector.type, connector ]);
   }
 
@@ -57,7 +67,7 @@ export class DiagramConnection {
 
   public disconnect() {
     if (this.connection.endpoints) {
-      this._diagram.jsPlumb.deleteConnection(this.connection);
+      this._jsPlumb.deleteConnection(this.connection);
     }
   }
 
@@ -88,25 +98,39 @@ export class DiagramConnection {
     this.connection.addClass('fs-diagram-clickable');
     if (this.config.tooltip) {
       this.connection.bind('mouseover', (conn, event) => {
-        const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
-        if (tip) {
 
-          if (conn.tooltipTimer) {
-            clearInterval(conn.tooltipTimer);
-          }
-
-          tip.classList.add('show');
+        if (this._diagramService.dragging) {
+          return false;
         }
+
+        this._ngZone.runOutsideAngular(() => {
+          const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
+          if (tip) {
+
+            if (conn.tooltipTimer) {
+              clearInterval(conn.tooltipTimer);
+            }
+
+            tip.classList.add('show');
+          }
+        });
       });
 
       this.connection.bind('mouseout', (conn, event) => {
-        const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
 
-        if (tip) {
-          conn.tooltipTimer = setTimeout(() => {
-            tip.classList.remove('show');
-          }, 100);
+        if (this._diagramService.dragging) {
+          return false;
         }
+
+        this._ngZone.runOutsideAngular(() => {
+          const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
+
+          if (tip) {
+            conn.tooltipTimer = setTimeout(() => {
+              tip.classList.remove('show');
+            }, 100);
+          }
+        });
       });
 
       const label = `<div class="fs-diagram-connection-tooltip fs-diagram-connection-tooltip_` +
@@ -164,12 +188,12 @@ export class DiagramConnection {
         }]);
     }
 
-    if (this._diagram.config.Point.shape) {
-      this._addPoint(this._diagram.config.Point, this.config.Point, 'source');
+    if (this._diagramConfig.Point.shape) {
+      this._addPoint(this._diagramConfig.Point, this.config.Point, 'source');
     }
 
-    if (this._diagram.config.targetPoint.shape) {
-      this._addPoint(this._diagram.config.targetPoint, this.config.targetPoint, 'target');
+    if (this._diagramConfig.targetPoint.shape) {
+      this._addPoint(this._diagramConfig.targetPoint, this.config.targetPoint, 'target');
     }
   }
 

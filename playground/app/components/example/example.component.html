@@ -2,58 +2,65 @@
   <button mat-icon-button (click)="add()"><mat-icon>add</mat-icon></button>
 </div>
 
-<div
-  fsDiagram
-  [config]="diagramConfig"
-  (initialized)="initialized()"
-  (connectionCreated)="connectionCreated($event)">
+<!-- <fs-zoom-pan [zoomMin]=".1" #zoomPan>
+  <ng-template fsZoomPanContent> -->
+    <div
+      fsDiagram
+      [config]="diagramConfig"
+      (initialized)="initialized()"
+      (connectionCreated)="connectionCreated($event)">
 
-  <div
-    fsDiagramObject
-    [targetable]="false"
-    class="start-object"
-    x1="60"
-    y1="60"
-    [data]="startObject"
-    [draggable]="false">
-  </div>
+      <div
+        fsDiagramObject
+        [targetable]="false"
+        class="start-object"
+        x1="60"
+        y1="60"
+        [data]="startObject"
+        [draggable]="false">
+      </div>
 
-  <div
-    *ngFor="let object of objects"
-    class="object"
-    fsDiagramObject
-    (dragStop)="objectDragStop($event)"
-    (dragStart)="objectDragStart($event)"
-    (click)="objectClick($event)"
-    [data]="object"
-    [x1]="object.x1"
-    [y1]="object.y1"
-    maxSourceConnections="2">
-    <div class="buttons">
-      <fs-menu class="simple-menu">
-        <ng-template fs-menu-item (click)="addExternal(object)">
-          Add External Link
-        </ng-template>
-        <ng-template fs-menu-item (click)="remove(object)">
-          Delete
-        </ng-template>
-        <ng-template fs-menu-item (click)="repaint(object)">
-          Repaint
-        </ng-template>
-        <ng-template fs-menu-item (click)="updateLabel(object)">
-          Update Label
-        </ng-template>
-      </fs-menu>
+      <!-- [scale]="zoomPan.scale" -->
+
+      <div
+        *ngFor="let object of objects"
+        class="object"
+        fsDiagramObject
+
+        (dragStop)="objectDragStop($event)"
+        (dragStart)="objectDragStart($event)"
+        (click)="objectClick($event)"
+        [data]="object"
+        [x1]="object.x1"
+        [y1]="object.y1"
+        maxSourceConnections="2">
+        <div class="buttons">
+          <fs-menu class="simple-menu">
+            <ng-template fs-menu-item (click)="addExternal(object)">
+              Add External Link
+            </ng-template>
+            <ng-template fs-menu-item (click)="remove(object)">
+              Delete
+            </ng-template>
+            <ng-template fs-menu-item (click)="repaint(object)">
+              Repaint
+            </ng-template>
+            <ng-template fs-menu-item (click)="updateLabel(object)">
+              Update Label
+            </ng-template>
+          </fs-menu>
+        </div>
+        <div>{{object.name}}</div>
+        <div fsDiagramSource placement="north"></div>
+        <div fsDiagramSource placement="south"></div>
+        <div fsDiagramSource placement="east"></div>
+        <div fsDiagramSource placement="west"></div>
+
+        <div fsDiagramSource placement="north-east"></div>
+        <div fsDiagramSource placement="north-west"></div>
+        <div fsDiagramSource placement="south-east"></div>
+        <div fsDiagramSource placement="south-west"></div>
+      </div>
     </div>
-    <div>{{object.name}}</div>
-    <div fsDiagramSource placement="north"></div>
-    <div fsDiagramSource placement="south"></div>
-    <div fsDiagramSource placement="east"></div>
-    <div fsDiagramSource placement="west"></div>
-
-    <div fsDiagramSource placement="north-east"></div>
-    <div fsDiagramSource placement="north-west"></div>
-    <div fsDiagramSource placement="south-east"></div>
-    <div fsDiagramSource placement="south-west"></div>
-  </div>
-</div>
+  <!-- </ng-template>
+</fs-zoom-pan> -->
