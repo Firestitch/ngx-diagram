@@ -3,7 +3,7 @@ import { DiagramConfig } from 'src/app/interfaces';
 import { DiagramConnection } from 'src/app/classes';
 import { Component, OnInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FsPrompt } from '@firestitch/prompt';
-import { random } from 'lodash-es';
+import { random, cloneDeep } from 'lodash-es';
 import { ConnectionConfig, ConnectionEvent, ConnectionCreated } from 'src/app/interfaces';
 import { ConnectionActor, ConnectorType } from 'src/app/helpers';
 
@@ -37,21 +37,16 @@ export class ExampleComponent implements OnInit {
         this.add();
       }
 
-      this.diagram.connect(this.startObject, this.objects[0], {
-        label: {
-          content: 'Start'
-        },
-        click: () => {
-          console.log('Connection Clicked');
-        }
-      });
-
       this._cdRef.markForCheck();
     }, 100);
   }
 
   remove(object) {
     this.objects = this.objects.filter(obj => obj !== object);
+  }
+
+  clone() {
+    this.objects = cloneDeep(this.objects);
   }
 
   add() {
@@ -64,6 +59,46 @@ export class ExampleComponent implements OnInit {
     const object = { name: 'Object ' + (idx + 1), x1: x1, y1: y1, id: idx + 1 };
 
     this.objects.push(object);
+
+    const object2 = this.objects[this.objects.length - 1];
+    const object1 = this.objects[this.objects.length - 2];
+
+    if (!object1) {
+
+      return this.diagram.connect(this.startObject, object2, {
+        label: {
+          content: 'Start'
+        },
+        click: () => {
+          console.log('Connection Clicked');
+        }
+      });
+    }
+
+    const config: ConnectionConfig = {
+      name: 'label-' + idx,
+      label: {
+        content: 'Label ' + (idx + 1),
+        click: (event: ConnectionEvent) => {
+          this.connectionLabelClick(event);
+        },
+        tooltip: {
+          content: 'Tooltip that spans\nmultiple lines and support <br><b>HTML</b>'
+        }
+      },
+      tooltip: {
+        content: 'Connection Tooltip'
+      },
+      data: {
+        object: object1
+      },
+      click: () => {
+        console.log('Connection clicked');
+      }
+    };
+
+    this.diagram.connect(object1, object2, config);
+
   }
 
   public initialized() {
@@ -72,35 +107,7 @@ export class ExampleComponent implements OnInit {
 
       this.objects.forEach((object1, idx) => {
 
-        const object2 = this.objects[idx + 1];
 
-        if (!object2) {
-          return;
-        }
-
-        const config: ConnectionConfig = {
-          name: 'label-' + idx,
-          label: {
-            content: 'Label ' + (idx + 1),
-            click: (event: ConnectionEvent) => {
-              this.connectionLabelClick(event);
-            },
-            tooltip: {
-              content: 'Tooltip that spans\nmultiple lines and support <br><b>HTML</b>'
-            }
-          },
-          tooltip: {
-            content: 'Connection Tooltip'
-          },
-          data: {
-            object: object1
-          },
-          click: () => {
-            console.log('Connection clicked');
-          }
-        };
-
-        this.diagram.connect(object1, object2, config);
       });
     });
   }

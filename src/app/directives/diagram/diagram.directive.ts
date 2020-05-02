@@ -51,6 +51,21 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
               private _ngZone: NgZone,
               private _diagramService: DiagramService) {
     this._differ = this.differs.find([]).create(null);
+
+    // const listener1 = document.addEventListener;
+    // const ngZone = this._diagramService.ngZone;
+    // const d = document.addEventListener;
+
+    // document.addEventListener = (type, fn) => {
+    //   const func = function() {
+    //     const args = arguments;
+    //     ngZone.runOutsideAngular(() => {
+    //       fn.apply(null, args);
+    //     });
+    //   }
+
+    //   listener1(type, func, false);
+    // }
   }
 
   public ngOnInit() {
@@ -79,7 +94,9 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
             actor: e ? ConnectionActor.User : ConnectionActor.Api
           }
 
-          this.connectionCreated.emit(event);
+          this._ngZone.run(() => {
+            this.connectionCreated.emit(event);
+          });
         });
       }
     });
@@ -132,11 +149,13 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       const initalizedDirectives$: Observable<any>[] = [];
 
       changeDiff.forEachAddedItem(change => {
-        this._addDiagramObject(change.item);
         initalizedDirectives$.push(change.item.initalized$);
       });
 
-      this._processObjectDirectives(initalizedDirectives$, this._connects.slice());
+      this._processObjectDirectives(initalizedDirectives$, this._connects.splice(0))
+      .subscribe(() => {
+        this.initialized.emit();
+      });
     }
 
     this.fsDiagramObjects.changes
@@ -150,13 +169,12 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
         if (changeDiff) {
           const initalizedDirectives$: Observable<any>[] = [];
           changeDiff.forEachAddedItem((change) => {
-            this._addDiagramObject(change.item);
             initalizedDirectives$.push(change.item.initalized$);
           });
-          this._processObjectDirectives(initalizedDirectives$, this._connects.slice());
 
-          changeDiff.forEachRemovedItem((change) => {
-            this._removeDiagramObject(change.item);
+          this._processObjectDirectives(initalizedDirectives$, this._connects.splice(0))
+          .subscribe(() => {
+            this.initialized.emit();
           });
         }
       });
@@ -204,19 +222,21 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private _processObjectDirectives(initalizedDirectives$, connects) {
+    return new Observable(observer => {
+      this.suspendRendering(() => {
 
-    this.suspendRendering(() => {
-
-      forkJoin(...initalizedDirectives$)
-        .pipe(
-          takeUntil(this._destroy$)
-        )
-        .subscribe(() => {
-          connects.forEach(item => {
-            this._connect(item.source, item.target, item.config);
+        forkJoin(...initalizedDirectives$)
+          .pipe(
+            takeUntil(this._destroy$)
+          )
+          .subscribe(() => {
+            connects.forEach(item => {
+              this._connect(item.source, item.target, item.config);
+            });
+            observer.next();
+            observer.complete();
           });
-          this.initialized.emit();
-        });
+      });
     });
   }
 
@@ -231,14 +251,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     });
 
     connection.config = config;
-  }
-
-  private _addDiagramObject(directive: FsDiagramObjectDirective) {
-    this._diagramService.diagramObjects.set(directive.data, directive);
-  }
-
-  private _removeDiagramObject(diagramObject: FsDiagramObjectDirective) {
-    this._diagramService.diagramObjects.delete(diagramObject.data);
   }
 
   private _initConfig() {

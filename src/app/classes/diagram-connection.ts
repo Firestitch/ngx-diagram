@@ -156,19 +156,25 @@ export class DiagramConnection {
         if (tooltipId === e.id) {
           // If the connection is clicked
           if (this.config.click) {
-            this.config.click(event);
+            this._ngZone.run(() => {
+              this.config.click(event);
+            });
           }
 
         } else if (labelId === e.id) {
           // If the label is clicked
           if (this.config.label.click) {
-            this.config.label.click(event);
+            this._ngZone.run(() => {
+              this.config.label.click(event);
+            });
           }
         }
       } else {
         // If the connection clicked
         if (this.config.click) {
-          this.config.click(event);
+          this._ngZone.run(() => {
+            this.config.click(event);
+          });
         }
       }
     });

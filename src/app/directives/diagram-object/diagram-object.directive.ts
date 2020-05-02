@@ -8,22 +8,18 @@ import {
   OnDestroy,
   NgZone,
   AfterViewInit,
-  ContentChildren,
-  QueryList,
-  HostListener
+  HostListener,
+  OnInit
 } from '@angular/core';
 import { uniq } from 'lodash-es';
 import { DiagramConnection } from '../../classes';
 import { DiagramService } from './../../services';
 import { BehaviorSubject } from 'rxjs';
-import { FsDiagramSourceDirective } from './../diagram-source/diagram-source.directive';
 
 @Directive({
   selector: '[fsDiagramObject]'
 })
-export class FsDiagramObjectDirective implements OnDestroy, AfterViewInit {
-
-  @ContentChildren(FsDiagramSourceDirective) diagramSources: QueryList<FsDiagramSourceDirective>;
+export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewInit {
 
   @HostBinding('class.fs-diagram-object') classDiagramObject = true;
 
@@ -81,18 +77,23 @@ export class FsDiagramObjectDirective implements OnDestroy, AfterViewInit {
     return this._element;
   }
 
+  public ngOnInit() {
+    this._diagramService.diagramObjects.set(this.data, this);
+  }
+
   public ngAfterViewInit() {
-
     setTimeout(() => {
-      this.initalized$.next(true);
-      this.initalized$.complete();
+      this._init();
     });
+  }
 
-    this._ngZone.runOutsideAngular(() => {
+  private _init() {
 
-      this.element.nativeElement.fsDiagramObjectDirective = this;
+    this.element.nativeElement.fsDiagramObjectDirective = this;
 
-      if (this.draggable) {
+    if (this.draggable) {
+
+      this._ngZone.runOutsideAngular(() => {
 
         this._diagramService.jsPlumb.draggable([this.element.nativeElement],
           {
@@ -106,65 +107,75 @@ export class FsDiagramObjectDirective implements OnDestroy, AfterViewInit {
               const y1 = e.pos[1];
               this.dragStop.emit({ event: e, data: this.data, x1: x1, y1: y1 });
               this._diagramService.dragging = false;
-            }
+            },
           });
+      });
 
-        // Hack: Override movelistener to wrap run outside Angular
-        const moveListener = this.element.nativeElement._katavorioDrag.moveListener;
-        this.element.nativeElement._katavorioDrag.moveListener = (e) => {
-          this._ngZone.runOutsideAngular(() => {
-            moveListener(e);
-          });
-        }
-      }
-
-      if (this.diagramSources.length) {
-        this._diagramService.jsPlumb.makeSource(this.element.nativeElement, {
-          filter: '.fs-diagram-source'
+      // Hack: Override movelistener to wrap run outside Angular
+      const moveListener = this.element.nativeElement._katavorioDrag.moveListener;
+      this.element.nativeElement._katavorioDrag.moveListener = (e) => {
+        this._ngZone.runOutsideAngular(() => {
+          moveListener(e);
         });
       }
 
-      if (this.targetable || this.selfTargetable) {
-        this._diagramService.jsPlumb.makeTarget(this.element.nativeElement, {
-          allowLoopback: this.selfTargetable
+      const downListener = this.element.nativeElement._katavorioDrag.downListener;
+      this.element.nativeElement._katavorioDrag.downListener = (e) => {
+        this._ngZone.runOutsideAngular(() => {
+          downListener(e);
         });
+      }
+    }
 
-        this._diagramService.jsPlumb.bind('connection', (info: any, e: Event) => {
+    if (this.element.nativeElement.querySelector('[fsDiagramSource]')) {
+      this._diagramService.jsPlumb.makeSource(this.element.nativeElement, {
+        filter: '.fs-diagram-source'
+      });
+    }
 
-          if (e) {
+    if (this.targetable || this.selfTargetable) {
+      this._diagramService.jsPlumb.makeTarget(this.element.nativeElement, {
+        allowLoopback: this.selfTargetable
+      });
 
-            if (info.target === this.element.nativeElement) {
+      this._diagramService.jsPlumb.bind('connection', (info: any, e: Event) => {
 
-              if (this.maxTargetConnections) {
-                const connections = this._diagramService.jsPlumb.getConnections({
-                  target: info.target
+        if (e) {
+
+          if (info.target === this.element.nativeElement) {
+
+            if (this.maxTargetConnections) {
+              const connections = this._diagramService.jsPlumb.getConnections({
+                target: info.target
+              });
+
+              if (this.maxTargetConnections < connections.length) {
+                setTimeout(() => {
+                  this._diagramService.jsPlumb.deleteConnection(info.connection);
                 });
-
-                if (this.maxTargetConnections < connections.length) {
-                  setTimeout(() => {
-                    this._diagramService.jsPlumb.deleteConnection(info.connection);
-                  });
-                  e.preventDefault();
-                }
-              }
-
-              if (this.maxSourceConnections) {
-                const connections = this._diagramService.jsPlumb.getConnections({
-                  source: info.source
-                });
-
-                if (this.maxSourceConnections < connections.length) {
-                  setTimeout(() => {
-                    this._diagramService.jsPlumb.deleteConnection(info.connection);
-                  });
-                  e.preventDefault();
-                }
-              }
+                e.preventDefault();
               }
             }
-        }, true);
-      }
-    });
+
+            if (this.maxSourceConnections) {
+              const connections = this._diagramService.jsPlumb.getConnections({
+                source: info.source
+              });
+
+              if (this.maxSourceConnections < connections.length) {
+                setTimeout(() => {
+                  this._diagramService.jsPlumb.deleteConnection(info.connection);
+                });
+                e.preventDefault();
+              }
+            }
+            }
+          }
+      }, true);
+    }
+
+    this.initalized$.next(true);
+    this.initalized$.complete();
   }
 
   public repaint() {
@@ -181,6 +192,7 @@ export class FsDiagramObjectDirective implements OnDestroy, AfterViewInit {
       conn.disconnect();
     });
 
+    this._diagramService.diagramObjects.delete(this.data);
     this._diagramService.jsPlumb.unmakeTarget(this.element.nativeElement);
   }
 }
