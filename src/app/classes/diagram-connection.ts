@@ -2,9 +2,8 @@ import { DiagramService } from './../services/diagram.service';
 import { DiagramConfig } from './../interfaces/diagram-config';
 import { ConnectorArchConfig, ConnectorElbowConfig, ConnectorCurveConfig, ConnectorStraightConfig } from './../interfaces/connector-config';
 import { forOwn } from 'lodash-es';
-import { ConnectionEvent, ConnectionLabelConfig } from '../interfaces/connection-config';
+import { ConnectionEvent, ConnectionLabelConfig, ConnectionConfig } from '../interfaces/connection-config';
 import { ConnectionOverlayType } from '../helpers/enums';
-import { ConnectionConfig } from '../interfaces';
 import { NgZone } from '@angular/core';
 
 export class DiagramConnection {

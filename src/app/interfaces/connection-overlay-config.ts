@@ -1,4 +1,4 @@
-import { ConnectionOverlayType } from '../helpers';
+import { ConnectionOverlayType } from '../helpers/enums';
 
 
 export interface ConnectionOverlayConfig {

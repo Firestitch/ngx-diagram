@@ -12,8 +12,8 @@ import {
   OnInit
 } from '@angular/core';
 import { uniq } from 'lodash-es';
-import { DiagramConnection } from '../../classes';
-import { DiagramService } from './../../services';
+import { DiagramConnection } from '../../classes/diagram-connection';
+import { DiagramService } from './../../services/diagram.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Directive({

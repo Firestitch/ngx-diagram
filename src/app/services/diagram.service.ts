@@ -1,5 +1,5 @@
 import { DiagramConfig } from './../interfaces/diagram-config';
-import { DiagramConnection } from '../classes';
+import { DiagramConnection } from '../classes/diagram-connection';
 import { FsDiagramObjectDirective } from './../directives/diagram-object/diagram-object.directive';
 import { Injectable, NgZone } from '@angular/core';
 import { jsPlumb } from 'jsplumb';

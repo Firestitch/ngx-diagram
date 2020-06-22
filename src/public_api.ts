@@ -3,5 +3,11 @@ export { FsDiagramObjectDirective } from './app/directives/diagram-object/diagra
 export { FsDiagramDirective } from './app/directives/diagram/diagram.directive';
 export { FsDiagramSourceDirective } from './app/directives/diagram-source/diagram-source.directive';
 export * from './app/helpers/enums';
-export * from './app/helpers/enums';
-export * from './app/interfaces';
+export * from './app/classes/diagram-connection';
+export { ConnectionLabelConfig, ConnectionConfig, ConnectionEvent} from './app/interfaces/connection-config';
+export { ConnectionCreated } from './app/interfaces/connection-created';
+export { ConnectionOverlayConfig } from './app/interfaces/connection-overlay-config';
+export { ConnectorArchConfig, ConnectorCurveConfig, ConnectorElbowConfig, ConnectorStraightConfig } from './app/interfaces/connector-config';
+export { DiagramConfig, DiagramSourceConfig } from './app/interfaces/diagram-config';
+export { HoverPaintStyleConfig } from './app/interfaces/hover-paint-style-config';
+export { PaintStyleConfig } from './app/interfaces/paint-style-config';

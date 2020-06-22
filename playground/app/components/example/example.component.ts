@@ -1,11 +1,22 @@
-import { FsDiagramDirective } from 'src/app/directives/diagram/diagram.directive';
-import { DiagramConfig } from 'src/app/interfaces';
-import { DiagramConnection } from 'src/app/classes';
-import { Component, OnInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  ViewChild
+} from '@angular/core';
+import { cloneDeep, random } from 'lodash-es';
 import { FsPrompt } from '@firestitch/prompt';
-import { random, cloneDeep } from 'lodash-es';
-import { ConnectionConfig, ConnectionEvent, ConnectionCreated } from 'src/app/interfaces';
-import { ConnectionActor, ConnectorType } from 'src/app/helpers';
+import {
+  ConnectionActor,
+  ConnectionConfig,
+  ConnectionCreated,
+  ConnectionEvent,
+  ConnectorType,
+  DiagramConfig,
+  DiagramConnection,
+  FsDiagramDirective
+} from '@firestitch/diagram';
 
 
 @Component({

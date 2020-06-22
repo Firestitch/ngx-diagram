@@ -18,11 +18,10 @@ import { Subject, Observable, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { FsDiagramObjectDirective } from '../diagram-object/diagram-object.directive';
-import { ConnectionConfig } from '../../interfaces';
-import { ConnectorType } from '../../helpers';
+import { ConnectionConfig } from '../../interfaces/connection-config';
 import { DiagramConfig } from '../../interfaces/diagram-config';
-import { DiagramService } from './../../services';
-import { ConnectionActor, PointShape } from '../../helpers/enums';
+import { DiagramService } from './../../services/diagram.service';
+import { ConnectionActor, PointShape, ConnectorType } from '../../helpers/enums';
 import { ConnectionCreated } from '../../interfaces/connection-created';
 import { DiagramConnection } from '../../classes/diagram-connection';
 
