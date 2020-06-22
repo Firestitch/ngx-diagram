@@ -16,7 +16,7 @@ import { ConnectionActor, ConnectorType } from 'src/app/helpers';
 })
 export class ExampleComponent implements OnInit {
 
-  @ViewChild(FsDiagramDirective)
+  @ViewChild(FsDiagramDirective, { static: true })
   public diagram: FsDiagramDirective;
 
   public objects = [];
