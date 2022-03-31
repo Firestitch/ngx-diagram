@@ -73,7 +73,7 @@
  */
 
 (window as any).__zone_symbol__BLACK_LISTED_EVENTS = ['mousemove'];
-import 'zone.js/dist/zone';  // Included with Angular CLI.
+import 'zone.js';  // Included with Angular CLI.
 
 
 /***************************************************************************************************
