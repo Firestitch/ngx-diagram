@@ -45,34 +45,19 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   private _differ;
   private _destroy$ = new Subject<void>();
 
-  constructor(private _element: ElementRef,
-              private differs: IterableDiffers,
-              private _ngZone: NgZone,
-              private _diagramService: DiagramService) {
+  constructor(
+    private _element: ElementRef,
+  private differs: IterableDiffers,
+  private _ngZone: NgZone,
+  private _diagramService: DiagramService,
+  ) {
     this._differ = this.differs.find([]).create(null);
-
-    // const listener1 = document.addEventListener;
-    // const ngZone = this._diagramService.ngZone;
-    // const d = document.addEventListener;
-
-    // document.addEventListener = (type, fn) => {
-    //   const func = function() {
-    //     const args = arguments;
-    //     ngZone.runOutsideAngular(() => {
-    //       fn.apply(null, args);
-    //     });
-    //   }
-
-    //   listener1(type, func, false);
-    // }
   }
 
   public ngOnInit() {
-
     this._initConfig();
 
     this._diagramService.diagramConfig = this.config;
-
     this.jsPlumb.bind('connection', (info: any, e: Event) => {
 
       if (e && e.defaultPrevented) {
@@ -140,8 +125,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     this._destroy$.complete();
   }
 
-  public ngAfterViewInit() {
-
+  public ngAfterViewInit(): void {
     const changeDiff = this._differ.diff(this.fsDiagramObjects);
     if (changeDiff) {
 
@@ -186,7 +170,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   }
 
   public connect(source: any, target: any, config: ConnectionConfig = {}) {
-
     const sourceDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(source);
     const targetDiagram: FsDiagramObjectDirective = this._diagramService.diagramObjects.get(target);
 
@@ -218,6 +201,11 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
   public getDiagramObject(data: any): FsDiagramObjectDirective {
     return this._diagramService.diagramObjects.get(data);
+  }
+
+  public findDiagramObject(find: (data: FsDiagramObjectDirective) => boolean): FsDiagramObjectDirective {
+    return Array.from(this._diagramService.diagramObjects.values())
+      .find(find);
   }
 
   private _processObjectDirectives(initalizedDirectives$, connects) {
