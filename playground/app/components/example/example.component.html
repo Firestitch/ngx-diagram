@@ -15,8 +15,8 @@
         fsDiagramObject
         [targetable]="false"
         class="start-object"
-        x1="60"
-        y1="60"
+        [x1]="60"
+        [y1]="60"
         [data]="startObject"
         [draggable]="false">
       </div>
@@ -34,7 +34,7 @@
         [data]="object"
         [x1]="object.x1"
         [y1]="object.y1"
-        maxSourceConnections="2">
+        [maxSourceConnections]="2">
         <div class="buttons">
           <fs-menu class="simple-menu">
             <ng-template fs-menu-item (click)="addExternal(object)">
