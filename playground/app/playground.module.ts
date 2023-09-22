@@ -1,21 +1,19 @@
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Routes } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterModule, Routes } from '@angular/router';
 
-import { FsExampleModule } from '@firestitch/example';
-import { FsMessageModule } from '@firestitch/message';
 import { FsDiagramModule } from '@firestitch/diagram';
-import { FsZoomPanModule } from '@firestitch/zoom-pan';
-import { FsPromptModule } from '@firestitch/prompt';
+import { FsExampleModule } from '@firestitch/example';
 import { FsMenuModule } from '@firestitch/menu';
+import { FsMessageModule } from '@firestitch/message';
+import { FsPromptModule } from '@firestitch/prompt';
+import { FsZoomPanModule } from '@firestitch/zoom-pan';
 
-import { ToastrModule } from 'ngx-toastr';
-
-import { AppMaterialModule } from './material.module';
-import { ExampleComponent, ExamplesComponent } from './components';
 import { AppComponent } from './app.component';
+import { ExampleComponent, ExamplesComponent } from './components';
+import { AppMaterialModule } from './material.module';
 
 const routes: Routes = [
   { path: '', component: ExamplesComponent },
@@ -34,7 +32,6 @@ const routes: Routes = [
     FsExampleModule.forRoot(),
     FsMessageModule.forRoot(),
     FsMenuModule.forRoot(),
-    ToastrModule.forRoot({ preventDuplicates: true }),
     RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' }),
   ],
   entryComponents: [],
