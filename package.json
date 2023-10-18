@@ -45,15 +45,16 @@
     "@firestitch/clear": "^12.0.0",
     "@firestitch/common": "^12.0.0",
     "@firestitch/component-tools": "^12.0.17",
-    "@firestitch/drawer": "^12.0.0",
-    "@firestitch/example": "^12.1.1",
-    "@firestitch/iframe": "^12.0.7",
-    "@firestitch/menu": "^12.0.1",
-    "@firestitch/message": "^12.3.1",
     "@firestitch/date": "^12.0.0",
     "@firestitch/datepicker": "^12.11.6",
     "@firestitch/dialog": "^12.1.0",
+    "@firestitch/drawer": "^12.0.0",
+    "@firestitch/example": "^12.1.1",
+    "@firestitch/iframe": "^12.0.7",
     "@firestitch/label": "^12.0.0",
+    "@firestitch/lint": "^12.0.18",
+    "@firestitch/menu": "^12.0.1",
+    "@firestitch/message": "^12.3.1",
     "@firestitch/prompt": "^12.0.1",
     "@firestitch/scroll-picker": "^12.0.0",
     "@firestitch/zoom-pan": "^8.0.3",
@@ -73,7 +74,7 @@
     "lodash-es": ">=4.17.11"
   },
   "dependencies": {
-    "tslib": "^2.0.0",
-    "jsplumb": "^2.13.1"
+    "jsplumb": "^2.13.1",
+    "tslib": "^2.0.0"
   }
 }
