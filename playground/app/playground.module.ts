@@ -8,7 +8,6 @@ import { FsDiagramModule } from '@firestitch/diagram';
 import { FsExampleModule } from '@firestitch/example';
 import { FsMenuModule } from '@firestitch/menu';
 import { FsMessageModule } from '@firestitch/message';
-import { FsPromptModule } from '@firestitch/prompt';
 import { FsZoomPanModule } from '@firestitch/zoom-pan';
 
 import { AppComponent } from './app.component';
@@ -28,7 +27,6 @@ const routes: Routes = [
         AppMaterialModule,
         FormsModule,
         FsZoomPanModule,
-        FsPromptModule.forRoot(),
         FsExampleModule.forRoot(),
         FsMessageModule.forRoot(),
         FsMenuModule.forRoot(),
@@ -37,7 +35,7 @@ const routes: Routes = [
     declarations: [
         AppComponent,
         ExamplesComponent,
-        ExampleComponent
+        ExampleComponent,
     ],
     providers: []
 })

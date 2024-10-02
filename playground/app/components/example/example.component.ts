@@ -5,8 +5,6 @@ import {
   OnInit,
   ViewChild
 } from '@angular/core';
-import { cloneDeep, random } from 'lodash-es';
-import { FsPrompt } from '@firestitch/prompt';
 import {
   ConnectionActor,
   ConnectionConfig,
@@ -17,6 +15,7 @@ import {
   DiagramConnection,
   FsDiagramDirective
 } from '@firestitch/diagram';
+import { cloneDeep, random } from 'lodash-es';
 
 
 @Component({
@@ -37,8 +36,9 @@ export class ExampleComponent implements OnInit {
     }
   };
 
-  constructor(private _prompt: FsPrompt,
-              private _cdRef: ChangeDetectorRef) {}
+  constructor(
+    private _cdRef: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.diagramConfig = {}
@@ -169,13 +169,7 @@ export class ExampleComponent implements OnInit {
 
   public connectionLabelClick(e: ConnectionEvent) {
     console.log('Label clicked');
-    this._prompt.confirm({
-      title: 'Confirm',
-      template: 'Would you like to delete this connection?'
-    }).subscribe(() => {
-
-      e.connection.disconnect();
-    });
+    e.connection.disconnect();
   }
 
   public objectDragStart(e) {
