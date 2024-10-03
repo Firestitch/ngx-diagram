@@ -30,7 +30,7 @@ const routes: Routes = [
         FsExampleModule.forRoot(),
         FsMessageModule.forRoot(),
         FsMenuModule.forRoot(),
-        RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' }),
+        RouterModule.forRoot(routes, {}),
     ],
     declarations: [
         AppComponent,
