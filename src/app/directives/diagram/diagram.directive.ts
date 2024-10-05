@@ -121,7 +121,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
   public ngOnDestroy() {
     this.jsPlumb.reset();
-    this._destroy$.next();
+    this._destroy$.next(null);
     this._destroy$.complete();
   }
 
@@ -220,7 +220,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
             connects.forEach(item => {
               this._connect(item.source, item.target, item.config);
             });
-            observer.next();
+            observer.next(null);
             observer.complete();
           });
       });
