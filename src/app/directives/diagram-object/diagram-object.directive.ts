@@ -1,30 +1,65 @@
 import {
+  AfterViewInit,
   Directive,
   ElementRef,
   EventEmitter,
   HostBinding,
-  Input,
-  Output,
-  OnDestroy,
-  NgZone,
-  AfterViewInit,
   HostListener,
-  OnInit
+  Input,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output,
 } from '@angular/core';
+
+
+import { BehaviorSubject, Observable } from 'rxjs';
+
 import { uniq } from 'lodash-es';
+
 import { DiagramConnection } from '../../classes/diagram-connection';
+
 import { DiagramService } from './../../services/diagram.service';
-import { BehaviorSubject } from 'rxjs';
 
 @Directive({
-  selector: '[fsDiagramObject]'
+  selector: '[fsDiagramObject]',
 })
 export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewInit {
 
-  @HostBinding('class.fs-diagram-object') classDiagramObject = true;
+  @Input() public data;
+  @Input() public scale = 1;
+  @Input() public maxTargetConnections = 0;
+  @Input() public maxSourceConnections = 0;
+  @Input() public selfTargetable = true;
+  @Input() public targetable = true;
+
+  @Input()
+  @HostBinding('style.top.px') public y1: number;
+
+  @Input()
+  @HostBinding('style.left.px') public x1: number;
+
+  @Input()
+  @HostBinding('class.draggable') public draggable = true;
+
+  @Output() public dragStop = new EventEmitter<any>();
+  @Output() public dragStart = new EventEmitter<any>();
+
+  @HostBinding('class.fs-diagram-object') 
+  public classDiagramObject = true;
+
+  private _mouseDownEvent;
+  private _mouseUpEvent;
+  private _initalized$ = new BehaviorSubject<boolean>(false);
+
+  constructor(
+    private _element: ElementRef,
+    private _ngZone: NgZone,
+    private _diagramService: DiagramService,
+  ) {}
 
   @HostListener('click', ['$event'])
-  onClick(e) {
+  public onClick(e) {
     const xDelta = Math.abs(this._mouseDownEvent.screenX - this._mouseUpEvent.screenX);
     const yDelta = Math.abs(this._mouseDownEvent.screenY - this._mouseUpEvent.screenY);
 
@@ -35,45 +70,24 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
   }
 
   @HostListener('mousedown', ['$event'])
-  onMouseDown(e) {
+  public onMouseDown(e) {
     this._mouseDownEvent = e;
   }
 
   @HostListener('mouseup', ['$event'])
-  onMouseUp(e) {
+  public onMouseUp(e) {
     this._mouseUpEvent = e;
   }
 
+  public get initalized$(): Observable<boolean> {
+    return this._initalized$.asObservable();
+  }
 
-  @Input() data;
-  @Input() scale = 1;
-  @Input() maxTargetConnections = 0;
-  @Input() maxSourceConnections = 0;
-  @Input() selfTargetable = true;
-  @Input() targetable = true;
+  public get initalized(): boolean {
+    return this._initalized$.getValue();
+  }
 
-  @Input()
-  @HostBinding('style.top.px') y1: number;
-
-  @Input()
-  @HostBinding('style.left.px') x1: number;
-
-  @Input()
-  @HostBinding('class.draggable') draggable = true;
-
-  @Output() dragStop = new EventEmitter<any>();
-  @Output() dragStart = new EventEmitter<any>();
-
-  public initalized$ = new BehaviorSubject(false);
-
-  private _mouseDownEvent;
-  private _mouseUpEvent;
-
-  constructor(private _element: ElementRef,
-              private _ngZone: NgZone,
-              private _diagramService: DiagramService) {}
-
-  get element(): ElementRef {
+  public get element(): ElementRef {
     return this._element;
   }
 
@@ -85,6 +99,24 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
     setTimeout(() => {
       this._init();
     });
+  }
+  
+  public repaint() {
+    this._diagramService.jsPlumb.revalidate(this.element.nativeElement);
+  }
+
+  public ngOnDestroy() {
+
+    uniq(
+      this._diagramService.getConnections(null, this.data)
+        .concat(this._diagramService.getConnections(this.data)),
+    )
+      .forEach((conn: DiagramConnection) => {
+        conn.disconnect();
+      });
+
+    this._diagramService.diagramObjects.delete(this.data);
+    this._diagramService.jsPlumb.unmakeTarget(this.element.nativeElement);
   }
 
   private _init() {
@@ -102,7 +134,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
               this._diagramService.jsPlumb.setZoom(this.scale);
               this._diagramService.dragging = true;
             },
-            stop: e => {
+            stop: (e) => {
               const x1 = e.pos[0];
               const y1 = e.pos[1];
               this.dragStop.emit({ event: e, data: this.data, x1: x1, y1: y1 });
@@ -117,25 +149,25 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
         this._ngZone.runOutsideAngular(() => {
           moveListener(e);
         });
-      }
+      };
 
       const downListener = this.element.nativeElement._katavorioDrag.downListener;
       this.element.nativeElement._katavorioDrag.downListener = (e) => {
         this._ngZone.runOutsideAngular(() => {
           downListener(e);
         });
-      }
+      };
     }
 
     if (this.element.nativeElement.querySelector('[fsDiagramSource]')) {
       this._diagramService.jsPlumb.makeSource(this.element.nativeElement, {
-        filter: '.fs-diagram-source'
+        filter: '.fs-diagram-source',
       });
     }
 
     if (this.targetable || this.selfTargetable) {
       this._diagramService.jsPlumb.makeTarget(this.element.nativeElement, {
-        allowLoopback: this.selfTargetable
+        allowLoopback: this.selfTargetable,
       });
 
       this._diagramService.jsPlumb.bind('connection', (info: any, e: Event) => {
@@ -146,7 +178,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
 
             if (this.maxTargetConnections) {
               const connections = this._diagramService.jsPlumb.getConnections({
-                target: info.target
+                target: info.target,
               });
 
               if (this.maxTargetConnections < connections.length) {
@@ -159,7 +191,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
 
             if (this.maxSourceConnections) {
               const connections = this._diagramService.jsPlumb.getConnections({
-                source: info.source
+                source: info.source,
               });
 
               if (this.maxSourceConnections < connections.length) {
@@ -169,30 +201,12 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
                 e.preventDefault();
               }
             }
-            }
           }
+        }
       }, true);
     }
 
-    this.initalized$.next(true);
-    this.initalized$.complete();
-  }
-
-  public repaint() {
-    this._diagramService.jsPlumb.revalidate(this.element.nativeElement);
-  }
-
-  public ngOnDestroy() {
-
-    uniq(
-        this._diagramService.getConnections(null, this.data)
-        .concat(this._diagramService.getConnections(this.data))
-    )
-    .forEach((conn: DiagramConnection) => {
-      conn.disconnect();
-    });
-
-    this._diagramService.diagramObjects.delete(this.data);
-    this._diagramService.jsPlumb.unmakeTarget(this.element.nativeElement);
+    this._initalized$.next(true);
+    this._initalized$.complete();
   }
 }

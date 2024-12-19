@@ -1,17 +1,17 @@
-import { Directive, Input, HostBinding, OnInit } from '@angular/core';
+import { Directive, HostBinding, Input, OnInit } from '@angular/core';
 
 
 @Directive({
-  selector: '[fsDiagramSource]'
+  selector: '[fsDiagramSource]',
 })
 export class FsDiagramSourceDirective implements OnInit {
 
-  @Input() placement;
+  @Input() public placement: string;
 
-  @HostBinding('class') class: string;
+  @HostBinding('class') public class: string;
 
-  ngOnInit() {
-    this.class = 'fs-diagram-source ' + this.placement;
+  public ngOnInit() {
+    this.class = `fs-diagram-source ${  this.placement}`;
   }
 
 }

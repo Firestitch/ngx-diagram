@@ -1,7 +1,12 @@
-import {  ConnectorArchConfig, ConnectorElbowConfig,
-          ConnectorCurveConfig, ConnectorStraightConfig } from './connector-config';
-import { DiagramSourceConfig } from './diagram-config';
 import { DiagramConnection } from '../classes/diagram-connection';
+
+import {
+  ConnectorArchConfig,
+  ConnectorCurveConfig,
+  ConnectorElbowConfig,
+  ConnectorStraightConfig,
+} from './connector-config';
+import { DiagramSourceConfig } from './diagram-config';
 
 
 export interface ConnectionConfig {

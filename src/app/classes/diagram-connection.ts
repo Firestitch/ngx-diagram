@@ -1,10 +1,18 @@
-import { DiagramService } from './../services/diagram.service';
-import { DiagramConfig } from './../interfaces/diagram-config';
-import { ConnectorArchConfig, ConnectorElbowConfig, ConnectorCurveConfig, ConnectorStraightConfig } from './../interfaces/connector-config';
-import { forOwn } from 'lodash-es';
-import { ConnectionEvent, ConnectionLabelConfig, ConnectionConfig } from '../interfaces/connection-config';
-import { ConnectionOverlayType } from '../helpers/enums';
 import { NgZone } from '@angular/core';
+
+import { forOwn } from 'lodash-es';
+
+import { ConnectionOverlayType } from '../helpers/enums';
+import {
+  ConnectionConfig, ConnectionEvent, ConnectionLabelConfig,
+} from '../interfaces/connection-config';
+
+import {
+  ConnectorArchConfig, ConnectorCurveConfig, ConnectorElbowConfig, ConnectorStraightConfig,
+} from './../interfaces/connector-config';
+import { DiagramConfig } from './../interfaces/diagram-config';
+import { DiagramService } from './../services/diagram.service';
+
 
 export class DiagramConnection {
 
@@ -15,9 +23,9 @@ export class DiagramConnection {
   private _ngZone: NgZone;
   private _diagramService: DiagramService;
 
-  public constructor( diagramService: DiagramService,
-                      connection,
-                      config?: ConnectionConfig) {
+  constructor( diagramService: DiagramService,
+    connection,
+    config?: ConnectionConfig) {
 
     this._jsPlumb = diagramService.jsPlumb;
     this._diagramService = diagramService;
@@ -54,8 +62,8 @@ export class DiagramConnection {
 
   public setConnector(connector:  ConnectorArchConfig | ConnectorElbowConfig |
                                   ConnectorCurveConfig | ConnectorStraightConfig) {
-    connector = Object.assign({}, this._diagramConfig.connector, connector);
-    this.connection.setConnector([connector.type, connector ]);
+    connector = { ...this._diagramConfig.connector, ...connector };
+    this.connection.setConnector([connector.type, connector]);
   }
 
   public setData(name, value?) {
@@ -70,8 +78,8 @@ export class DiagramConnection {
     }
   }
 
+  // eslint-disable-next-line max-statements
   public render() {
-
     this.connection.removeAllOverlays();
 
     if (this.config.connector) {
@@ -87,8 +95,8 @@ export class DiagramConnection {
     this.connection.addClass('fs-diagram-connection');
     this.connection.scope = this.config.name;
 
-    const tooltipId = 'tooltip_' + this.connection.id;
-    const labelId = 'label_' + this.connection.id;
+    const tooltipId = `tooltip_${  this.connection.id}`;
+    const labelId = `label_${  this.connection.id}`;
 
     this.connection.unbind('click');
     this.connection.unbind('mouseover');
@@ -96,7 +104,7 @@ export class DiagramConnection {
 
     this.connection.addClass('fs-diagram-clickable');
     if (this.config.tooltip) {
-      this.connection.bind('mouseover', (conn, event) => {
+      this.connection.bind('mouseover', (conn) => {
 
         if (this._diagramService.dragging) {
           return false;
@@ -132,14 +140,14 @@ export class DiagramConnection {
         });
       });
 
-      const label = `<div class="fs-diagram-connection-tooltip fs-diagram-connection-tooltip_` +
+      const label = '<div class="fs-diagram-connection-tooltip fs-diagram-connection-tooltip_' +
                     `${this.connection.id}">${this.config.tooltip.content}</div>`;
 
       this.connection.addOverlay([ConnectionOverlayType.Label,
         {
           label: label,
           id: tooltipId,
-          cssClass: 'fs-diagram-connection-tooltip-overlay'
+          cssClass: 'fs-diagram-connection-tooltip-overlay',
         }]);
     }
 
@@ -147,7 +155,7 @@ export class DiagramConnection {
       const event: ConnectionEvent = {
         data: this.connection.getData(),
         event: originalEvent,
-        connection: this
+        connection: this,
       };
 
       if (e.type) {
@@ -189,7 +197,7 @@ export class DiagramConnection {
         {
           label: this._renderLabelContent(),
           cssClass: cssClass,
-          id: labelId
+          id: labelId,
         }]);
     }
 
@@ -203,22 +211,20 @@ export class DiagramConnection {
   }
 
   private _addPoint(defaultConfig, config, name) {
-    const overlay = Object.assign(
-      {},
-      defaultConfig,
-      {
-        id: `${name}_${this.connection.id}`
-      },
-      config);
+    const overlay = {
+      
+      ...defaultConfig,
+      id: `${name}_${this.connection.id}`,
+      ...config };
 
-      this.connection.addOverlay([overlay.shape, overlay]);
+    this.connection.addOverlay([overlay.shape, overlay]);
   }
 
   private _renderLabelContent() {
     let label = this.config.label.content;
 
     if (this.config.label.tooltip) {
-      label += '<div class="fs-diagram-connection-label-tooltip">' + this.config.label.tooltip.content + '</div>';
+      label += `<div class="fs-diagram-connection-label-tooltip">${  this.config.label.tooltip.content  }</div>`;
     }
 
     return label;
