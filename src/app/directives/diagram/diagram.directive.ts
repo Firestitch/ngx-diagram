@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 
 import { Observable, Subject, forkJoin, of } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
+import { switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { DiagramConnection } from '../../classes/diagram-connection';
 import { ConnectionActor, ConnectorType, PointShape } from '../../helpers/enums';
@@ -151,7 +151,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     this.fsDiagramObjects.changes
       .pipe(
         switchMap((fsDiagramObjects) => {
-
           const changeDiff = this._differ.diff(fsDiagramObjects);
 
           if (changeDiff) {
@@ -164,6 +163,9 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
           }
 
           return of(null);
+        }),
+        tap(() => {
+          this.initialized.emit();
         }),
         takeUntil(this._destroy$),
       )

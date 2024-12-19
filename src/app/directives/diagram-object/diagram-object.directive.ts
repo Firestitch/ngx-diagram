@@ -106,7 +106,6 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
   }
 
   public ngOnDestroy() {
-
     uniq(
       this._diagramService.getConnections(null, this.data)
         .concat(this._diagramService.getConnections(this.data)),
