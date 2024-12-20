@@ -1,10 +1,13 @@
-import {  ConnectorArchConfig,
-          ConnectorCurveConfig,
-          ConnectorElbowConfig,
-          ConnectorStraightConfig } from './connector-config';
 import { PointShape } from '../helpers/enums';
-import { PaintStyleConfig } from './paint-style-config';
+
+import {
+  ConnectorArchConfig,
+  ConnectorCurveConfig,
+  ConnectorElbowConfig,
+  ConnectorStraightConfig,
+} from './connector-config';
 import { HoverPaintStyleConfig } from './hover-paint-style-config';
+import { PaintStyleConfig } from './paint-style-config';
 
 
 export interface DiagramConfig {
@@ -13,7 +16,6 @@ export interface DiagramConfig {
   Point?: DiagramSourceConfig;
   targetPoint?: DiagramSourceConfig;
   connector?: ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig
-
 }
 
 export interface DiagramSourceConfig {

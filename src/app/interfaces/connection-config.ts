@@ -16,14 +16,12 @@ export interface ConnectionConfig {
   connector?: ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig,
   tooltip?: ConnectionTooltipConfig,
   name?: string
-  Point?: DiagramSourceConfig | boolean
+  point?: DiagramSourceConfig | boolean
   targetPoint?: DiagramSourceConfig | boolean
 }
 
 export interface ConnectionLabelConfig {
   content?: string,
-  click?: (event: ConnectionEvent) => void,
-  tooltip?: ConnectionTooltipConfig
 }
 
 export interface ConnectionTooltipConfig {

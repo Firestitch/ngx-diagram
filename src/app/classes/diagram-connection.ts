@@ -1,7 +1,8 @@
 import { NgZone } from '@angular/core';
 
-import { forOwn } from 'lodash-es';
+import { Connection, EVENT_CONNECTION_CLICK, EVENT_CONNECTION_MOUSEOUT, EVENT_CONNECTION_MOUSEOVER, LabelOverlay, Overlay } from '@jsplumb/browser-ui';
 
+import { FsDiagramDirective } from '../directives/diagram';
 import { ConnectionOverlayType } from '../helpers/enums';
 import {
   ConnectionConfig, ConnectionEvent, ConnectionLabelConfig,
@@ -10,223 +11,178 @@ import {
 import {
   ConnectorArchConfig, ConnectorCurveConfig, ConnectorElbowConfig, ConnectorStraightConfig,
 } from './../interfaces/connector-config';
-import { DiagramConfig } from './../interfaces/diagram-config';
-import { DiagramService } from './../services/diagram.service';
-
 
 export class DiagramConnection {
 
-  public connection;
-  private _jsPlumb;
-  private _diagramConfig: DiagramConfig;
+  public connection: Connection;
+
+  private _diagram: FsDiagramDirective;
   private _config: ConnectionConfig = {};
   private _ngZone: NgZone;
-  private _diagramService: DiagramService;
+  private _labelOverlay: Overlay;
 
-  constructor( diagramService: DiagramService,
+  constructor( 
+    diagram: FsDiagramDirective,
     connection,
-    config?: ConnectionConfig) {
-
-    this._jsPlumb = diagramService.jsPlumb;
-    this._diagramService = diagramService;
-    this._diagramConfig = diagramService.diagramConfig;
+  ) {
     this.connection = connection;
-    this._ngZone = diagramService.ngZone;
-
-    if (config) {
-      this.config = config || {};
-    }
+    this._config = connection.getData()['connection-config'] || {};
+    this._diagram = diagram;
+    // this._jsPlumb = diagramService.jsPlumb;
+    // this._diagramService = diagramService;
+    // this._diagramConfig = diagramService.diagramConfig;
+    // this._ngZone = diagramService.ngZone;
   }
 
-  public set config(value) {
-    this._config = value;
-    this.setData('connection-config', value);
+  public get label(): ConnectionLabelConfig {
+    return this._config.label || {};
   }
 
-  public get config() {
-    return this._config;
-  }
-
-  public setLabelContent(content) {
-    if (!this.config.label) {
-      this.config.label = {};
-    }
-    this.config.label.content = content;
-    this.render();
+  public setLabelContent(label) {
+    const overlay: LabelOverlay = this.connection.getOverlay(this.labelId);
+    overlay.setLabel(label);
   }
 
   public setLabel(label: ConnectionLabelConfig) {
-    this.config.label = label;
-    this.render();
+    this._config.label = label;
   }
 
-  public setConnector(connector:  ConnectorArchConfig | ConnectorElbowConfig |
-                                  ConnectorCurveConfig | ConnectorStraightConfig) {
-    connector = { ...this._diagramConfig.connector, ...connector };
-    this.connection.setConnector([connector.type, connector]);
-  }
-
-  public setData(name, value?) {
-    const data = this.connection.getData() || {};
-    data[name] = value;
-    this.connection.setData(data);
+  public setConnector(
+    connector:  ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig,
+  ) {
+    connector = { ...this._diagram.config.connector, ...connector };
+    this.connection.connector.type = connector.type;
   }
 
   public disconnect() {
     if (this.connection.endpoints) {
-      this._jsPlumb.deleteConnection(this.connection);
+      this.connection.instance.deleteConnection(this.connection);
     }
+
+    this.connection.removeAllOverlays();
+    this.connection.unbind();
+  }
+
+  public get labelId() {
+    return `label-${this.connection.id}`;
+  }
+
+  public get tooltipId() {
+    return `tooltip-${this.connection.id}`;
   }
 
   // eslint-disable-next-line max-statements
   public render() {
-    this.connection.removeAllOverlays();
-
-    if (this.config.connector) {
-      this.setConnector(this.config.connector);
+    if (this._config.connector) {
+      this.setConnector(this._config.connector);
     }
 
-    if (this.config.data) {
-      forOwn(this.config.data, (value, name) => {
-        this.setData(name, value);
-      });
-    }
+    // if (this._config.data) {
+    //   forOwn(this._config.data, (value, name) => {
+    //     this.connection.setData({
+    //       [name]: value,
+    //     });
+    //   });
+    // }
 
     this.connection.addClass('fs-diagram-connection');
-    this.connection.scope = this.config.name;
+    this.connection.scope = this._config.name;
 
-    const tooltipId = `tooltip_${  this.connection.id}`;
-    const labelId = `label_${  this.connection.id}`;
+    this._bindClickEvent();
+    this._bindTooltipEvent();
 
-    this.connection.unbind('click');
-    this.connection.unbind('mouseover');
-    this.connection.unbind('mouseout');
-
-    this.connection.addClass('fs-diagram-clickable');
-    if (this.config.tooltip) {
-      this.connection.bind('mouseover', (conn) => {
-
-        if (this._diagramService.dragging) {
-          return false;
-        }
-
-        this._ngZone.runOutsideAngular(() => {
-          const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
-          if (tip) {
-
-            if (conn.tooltipTimer) {
-              clearInterval(conn.tooltipTimer);
-            }
-
-            tip.classList.add('show');
-          }
-        });
-      });
-
-      this.connection.bind('mouseout', (conn, event) => {
-
-        if (this._diagramService.dragging) {
-          return false;
-        }
-
-        this._ngZone.runOutsideAngular(() => {
-          const tip = document.querySelector(`.fs-diagram-connection-tooltip_${conn.id}`);
-
-          if (tip) {
-            conn.tooltipTimer = setTimeout(() => {
-              tip.classList.remove('show');
-            }, 100);
-          }
-        });
-      });
-
-      const label = '<div class="fs-diagram-connection-tooltip fs-diagram-connection-tooltip_' +
-                    `${this.connection.id}">${this.config.tooltip.content}</div>`;
-
-      this.connection.addOverlay([ConnectionOverlayType.Label,
-        {
-          label: label,
-          id: tooltipId,
-          cssClass: 'fs-diagram-connection-tooltip-overlay',
-        }]);
+    if (this._config.click) {
+      this.connection.addClass('fs-diagram-clickable');
     }
 
-    this.connection.bind('click', (e, originalEvent) => {
-      const event: ConnectionEvent = {
-        data: this.connection.getData(),
-        event: originalEvent,
-        connection: this,
-      };
-
-      if (e.type) {
-
-        if (tooltipId === e.id) {
-          // If the connection is clicked
-          if (this.config.click) {
-            this._ngZone.run(() => {
-              this.config.click(event);
-            });
-          }
-
-        } else if (labelId === e.id) {
-          // If the label is clicked
-          if (this.config.label.click) {
-            this._ngZone.run(() => {
-              this.config.label.click(event);
-            });
-          }
-        }
-      } else {
-        // If the connection clicked
-        if (this.config.click) {
-          this._ngZone.run(() => {
-            this.config.click(event);
-          });
-        }
-      }
-    });
-
-    if (this.config.label) {
-
+    if (this._config.label) {
       let cssClass = 'fs-diagram-connection-label';
-      if (this.config.label.click) {
+      if (this._config.click) {
         cssClass += ' fs-diagram-clickable';
       }
-
-      this.connection.addOverlay([ConnectionOverlayType.Label,
-        {
-          label: this._renderLabelContent(),
-          cssClass: cssClass,
-          id: labelId,
-        }]);
+ 
+      this._labelOverlay = this.connection
+        .addOverlay({
+          type: ConnectionOverlayType.Label,
+          options: {
+            label: this._config.label.content,
+            cssClass: cssClass,
+            id: this.labelId,
+          },
+        });
     }
 
-    if (this._diagramConfig.Point.shape) {
-      this._addPoint(this._diagramConfig.Point, this.config.Point, 'source');
+    // if (this._diagram.config.sourcePoint.shape) {
+    //   this._addPoint(this._diagram.config.sourcePoint, this._config.Point, 'source');
+    // }
+
+    // if (this._diagramConfig.targetPoint.shape) {
+    //   this._addPoint(this._diagramConfig.targetPoint, this._config.targetPoint, 'target');
+    // }
+  }
+
+  private _bindTooltipEvent() {
+    if (!this._config.tooltip) {
+      return;
     }
 
-    if (this._diagramConfig.targetPoint.shape) {
-      this._addPoint(this._diagramConfig.targetPoint, this.config.targetPoint, 'target');
-    }
+    this.connection.instance
+      .bind(EVENT_CONNECTION_MOUSEOVER, (connection: Connection) => {
+        if (connection === this.connection) {
+          Object.values(connection.getOverlays())
+            .forEach((overlay) => {
+              const el = document.querySelector(`.jtk-overlay[jtk-overlay-id="${overlay.id}"]`);
+              el?.classList.add('show');
+            });
+        }
+      });
+
+    this.connection.instance
+      .bind(EVENT_CONNECTION_MOUSEOUT, (connection: Connection) => {
+        if (connection === this.connection) {
+          Object.values(connection.getOverlays())
+            .forEach((overlay) => {
+              const el = document.querySelector(`.jtk-overlay[jtk-overlay-id="${overlay.id}"]`);
+            
+              el?.classList.remove('show');
+            });
+        }
+      });
+  
+    this.connection.addOverlay({
+      type: ConnectionOverlayType.Label,
+      options: {
+        label: this._config.tooltip.content,
+        id: this.tooltipId,
+        cssClass: 'fs-diagram-connection-tooltip-overlay',
+      },
+    });
+  }
+
+  private _bindClickEvent() {
+    this.connection.instance
+      .bind(EVENT_CONNECTION_CLICK, (connection: Connection, event: PointerEvent) => {
+        if(connection === this.connection) {
+          const connectonEvent: ConnectionEvent = {
+            data: connection.getData(),
+            event,
+            connection: this,
+          };
+
+          if (this._config.click) {
+            this._config.click(connectonEvent);
+          }
+        }
+      });
   }
 
   private _addPoint(defaultConfig, config, name) {
-    const overlay = {
-      
+    const options = {
       ...defaultConfig,
       id: `${name}_${this.connection.id}`,
-      ...config };
+      ...config, 
+    };
 
-    this.connection.addOverlay([overlay.shape, overlay]);
-  }
-
-  private _renderLabelContent() {
-    let label = this.config.label.content;
-
-    if (this.config.label.tooltip) {
-      label += `<div class="fs-diagram-connection-label-tooltip">${  this.config.label.tooltip.content  }</div>`;
-    }
-
-    return label;
+    this.connection.addOverlay({ type: options.shape, options });
   }
 }

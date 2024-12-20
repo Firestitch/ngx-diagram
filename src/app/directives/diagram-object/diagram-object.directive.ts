@@ -1,35 +1,41 @@
 import {
-  AfterViewInit,
   Directive,
   ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
   Input,
-  NgZone,
   OnDestroy,
   OnInit,
   Output,
 } from '@angular/core';
 
+import { guid } from '@firestitch/common';
 
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import { uniq } from 'lodash-es';
+import {
+  BrowserJsPlumbInstance, ConnectionDragSelector, DragStartPayload, DragStopPayload,
+  EVENT_DRAG_START, EVENT_DRAG_STOP,
+} from '@jsplumb/browser-ui';
 
 import { DiagramConnection } from '../../classes/diagram-connection';
+import { ConnectionConfig } from '../../interfaces';
+import { FsDiagramDirective } from '../diagram/diagram.directive';
 
-import { DiagramService } from './../../services/diagram.service';
 
 @Directive({
   selector: '[fsDiagramObject]',
 })
-export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewInit {
+export class FsDiagramObjectDirective implements OnDestroy, OnInit {
 
   @Input() public data;
   @Input() public scale = 1;
-  @Input() public maxTargetConnections = 0;
-  @Input() public maxSourceConnections = 0;
+  @Input() public id: string;
+  @Input() public connections: {
+    target: any,
+    config: ConnectionConfig,
+  }[] = [];
   @Input() public selfTargetable = true;
   @Input() public targetable = true;
 
@@ -42,20 +48,31 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
   @Input()
   @HostBinding('class.draggable') public draggable = true;
 
-  @Output() public dragStop = new EventEmitter<any>();
-  @Output() public dragStart = new EventEmitter<any>();
+  @Output() 
+  public dragStop = new EventEmitter<{ 
+    event: DragStopPayload, data: any, x1: number, y1: number 
+  }>();
+
+  @Output() 
+  public dragStart = new EventEmitter<{ 
+    event: DragStartPayload 
+  }>();
 
   @HostBinding('class.fs-diagram-object') 
   public classDiagramObject = true;
 
+  @HostBinding('attr.id') 
+  public attrId = `diagram-object-${guid()}`;
+  
+
+  private _connectionDragSelector: ConnectionDragSelector;
   private _mouseDownEvent;
   private _mouseUpEvent;
   private _initalized$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     private _element: ElementRef,
-    private _ngZone: NgZone,
-    private _diagramService: DiagramService,
+    private _diagram: FsDiagramDirective,
   ) {}
 
   @HostListener('click', ['$event'])
@@ -87,125 +104,64 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit, AfterViewIni
     return this._initalized$.getValue();
   }
 
-  public get element(): ElementRef {
+  public get elementRef(): ElementRef {
     return this._element;
   }
 
   public ngOnInit() {
-    this._diagramService.diagramObjects.set(this.data, this);
+    this._diagram.diagramObjects.set(this.data, this);
   }
 
-  public ngAfterViewInit() {
-    setTimeout(() => {
-      this._init();
-    });
+  public get jsPlumb(): BrowserJsPlumbInstance {
+    return this._diagram.jsPlumb;
+  }
+
+  public get el(): Element {
+    return this.elementRef.nativeElement;
   }
   
   public repaint() {
-    this._diagramService.jsPlumb.revalidate(this.element.nativeElement);
+    this.jsPlumb.revalidate(this.el);
   }
 
   public ngOnDestroy() {
-    uniq(
-      this._diagramService.getConnections(null, this.data)
-        .concat(this._diagramService.getConnections(this.data)),
-    )
+    this._diagram.getObjectConnections(this.data)
       .forEach((conn: DiagramConnection) => {
         conn.disconnect();
       });
 
-    this._diagramService.diagramObjects.delete(this.data);
-    this._diagramService.jsPlumb.unmakeTarget(this.element.nativeElement);
+    this._diagram.diagramObjects.delete(this.data);
+    this.jsPlumb.removeSourceSelector(this._connectionDragSelector);
   }
 
-  private _init() {
-
-    this.element.nativeElement.fsDiagramObjectDirective = this;
-
+  public init() {
     if (this.draggable) {
+      this.jsPlumb.bind(EVENT_DRAG_START, (e: DragStartPayload) => {
+        this.dragStart.emit({ event: e });
+        this.jsPlumb.setZoom(this.scale);
+        this._diagram.dragging = true;
+      }); 
+      
+      this.jsPlumb.bind(EVENT_DRAG_STOP, (e: DragStopPayload) => {
+        const x1 = e.elements[0].pos[0];
+        const y1 = e.elements[0].pos[1];
+        this.dragStop.emit({ event: e, data: this.data, x1, y1 });
+        this._diagram.dragging = false;
+      }); 
+    } 
 
-      this._ngZone.runOutsideAngular(() => {
-
-        this._diagramService.jsPlumb.draggable([this.element.nativeElement],
-          {
-            start: (e) => {
-              this.dragStart.emit(e);
-              this._diagramService.jsPlumb.setZoom(this.scale);
-              this._diagramService.dragging = true;
-            },
-            stop: (e) => {
-              const x1 = e.pos[0];
-              const y1 = e.pos[1];
-              this.dragStop.emit({ event: e, data: this.data, x1: x1, y1: y1 });
-              this._diagramService.dragging = false;
-            },
-          });
-      });
-
-      // Hack: Override movelistener to wrap run outside Angular
-      const moveListener = this.element.nativeElement._katavorioDrag.moveListener;
-      this.element.nativeElement._katavorioDrag.moveListener = (e) => {
-        this._ngZone.runOutsideAngular(() => {
-          moveListener(e);
-        });
-      };
-
-      const downListener = this.element.nativeElement._katavorioDrag.downListener;
-      this.element.nativeElement._katavorioDrag.downListener = (e) => {
-        this._ngZone.runOutsideAngular(() => {
-          downListener(e);
-        });
-      };
-    }
-
-    if (this.element.nativeElement.querySelector('[fsDiagramSource]')) {
-      this._diagramService.jsPlumb.makeSource(this.element.nativeElement, {
-        filter: '.fs-diagram-source',
-      });
-    }
+    this._connectionDragSelector = this.jsPlumb.addSourceSelector(this.selector);
+    this.jsPlumb.addEndpoint(this.el, {
+      ...this._diagram.defaultConfig,
+      source: true,
+    });
 
     if (this.targetable || this.selfTargetable) {
-      this._diagramService.jsPlumb.makeTarget(this.element.nativeElement, {
-        allowLoopback: this.selfTargetable,
-      });
-
-      this._diagramService.jsPlumb.bind('connection', (info: any, e: Event) => {
-
-        if (e) {
-
-          if (info.target === this.element.nativeElement) {
-
-            if (this.maxTargetConnections) {
-              const connections = this._diagramService.jsPlumb.getConnections({
-                target: info.target,
-              });
-
-              if (this.maxTargetConnections < connections.length) {
-                setTimeout(() => {
-                  this._diagramService.jsPlumb.deleteConnection(info.connection);
-                });
-                e.preventDefault();
-              }
-            }
-
-            if (this.maxSourceConnections) {
-              const connections = this._diagramService.jsPlumb.getConnections({
-                source: info.source,
-              });
-
-              if (this.maxSourceConnections < connections.length) {
-                setTimeout(() => {
-                  this._diagramService.jsPlumb.deleteConnection(info.connection);
-                });
-                e.preventDefault();
-              }
-            }
-          }
-        }
-      }, true);
+      this.jsPlumb.addTargetSelector(`#${this.attrId}`);
     }
+  }
 
-    this._initalized$.next(true);
-    this._initalized$.complete();
+  public get selector(): string {
+    return `#${this.attrId} [fsDiagramSource]`;
   }
 }

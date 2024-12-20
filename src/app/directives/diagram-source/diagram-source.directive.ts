@@ -11,7 +11,7 @@ export class FsDiagramSourceDirective implements OnInit {
   @HostBinding('class') public class: string;
 
   public ngOnInit() {
-    this.class = `fs-diagram-source ${  this.placement}`;
+    this.class = `fs-diagram-source ${this.placement}`;
   }
 
 }

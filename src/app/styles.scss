@@ -85,11 +85,7 @@
 
 .fs-diagram-connection-tooltip-overlay {
   z-index: 9999;
-}
-
-.fs-diagram-connection-label-tooltip,
-.fs-diagram-connection-tooltip {
-    transform-origin: center top 0px;
+  transform-origin: center top 0px;
     transform: scale(1);
     color: #fff;
     border-radius: 4px;
@@ -113,16 +109,4 @@
     &:hover {
       display: block;
     }
-}
-
-.fs-diagram-connection-tooltip {
-  top: -13px;
-}
-
-.fs-diagram-connection-label-tooltip {
-  top: 18px;
-}
-
-.fs-diagram-connection-label:hover .fs-diagram-connection-label-tooltip {
-  display: block;
 }
