@@ -137,16 +137,20 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   public init() {
     if (this.draggable) {
       this.jsPlumb.bind(EVENT_DRAG_START, (e: DragStartPayload) => {
-        this.dragStart.emit({ event: e });
-        this.jsPlumb.setZoom(this.scale);
-        this._diagram.dragging = true;
+        if(e.el.isEqualNode(this.el)) {
+          this.dragStart.emit({ event: e });
+          this.jsPlumb.setZoom(this.scale);
+          this._diagram.dragging = true;
+        }
       }); 
       
       this.jsPlumb.bind(EVENT_DRAG_STOP, (e: DragStopPayload) => {
-        const x1 = e.elements[0].pos[0];
-        const y1 = e.elements[0].pos[1];
-        this.dragStop.emit({ event: e, data: this.data, x1, y1 });
-        this._diagram.dragging = false;
+        if(e.el.isEqualNode(this.el)) {
+          const x1 = e.elements[0].pos[0];
+          const y1 = e.elements[0].pos[1];
+          this.dragStop.emit({ event: e, data: this.data, x1, y1 });
+          this._diagram.dragging = false;
+        }
       }); 
     } 
 
