@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 
 import { forkJoin, Observable, of, Subject } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
+import { switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import {
   BrowserJsPlumbInstance, Connection, ConnectionEstablishedParams,
@@ -38,18 +38,18 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   @HostBinding('class.fs-diagram') public classFsDiagram = true;
 
   @Output() public diagramObjectsAdded = new EventEmitter<FsDiagramObjectDirective[]>();
-
-  @Input() public config: DiagramConfig = {};
+  @Output() public initialized = new EventEmitter<void>();
 
   @Output() public connectionCreated = new EventEmitter<ConnectionCreated>();
   
+  @Input() public config: DiagramConfig = {};
+
   @ContentChildren(FsDiagramObjectDirective) 
   public fsDiagramObjects: QueryList<FsDiagramObjectDirective>;
 
   public dragging = false;
   public diagramObjects = new Map<any, FsDiagramObjectDirective>();
 
-  private _connects = [];
   private _differ: IterableDiffer<FsDiagramObjectDirective>;
   private _destroy$ = new Subject<void>();
   private _jsPlumb: BrowserJsPlumbInstance;
@@ -72,17 +72,23 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
         }
 
         if (connectionEvent.connection.target && connectionEvent.connection.source) {
-          const connection = new DiagramConnection(
+          const diagramConnection = new DiagramConnection(
             this,
             connectionEvent.connection, 
           );
 
-          connection.render();
+          diagramConnection.render();
+
+          const targetDirective = Array.from(this.diagramObjects.values())
+            .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.target));
+
+          const sourceDirective = Array.from(this.diagramObjects.values())
+            .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.source));
 
           const connectionCreated: ConnectionCreated = {
-            connection: connection,
-            target: connectionEvent.connection.target.fsDiagramObjectDirective,
-            source: connectionEvent.connection.source.fsDiagramObjectDirective,
+            connection: diagramConnection,
+            target: targetDirective?.data,
+            source: sourceDirective?.data,
             actor: event ? ConnectionActor.User : ConnectionActor.Api,
           };
 
@@ -140,9 +146,12 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   public processDiff(fsDiagramObjects: QueryList<FsDiagramObjectDirective>): Observable<any> {
     const diff = this._differ.diff(fsDiagramObjects);
     if (diff) {
+      const diagramObjects = [];
+
       diff
         .forEachAddedItem((change) => {
           change.item.init();
+          diagramObjects.push(change.item);
         });
         
       diff
@@ -151,6 +160,8 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
             this.connect(change.item.data, connection.target, connection.config);
           });
         });
+
+      return of(diagramObjects);
     }
 
     return of([]);
@@ -159,11 +170,16 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   public ngAfterViewInit(): void {
     this.processDiff(this.fsDiagramObjects)
       .subscribe();
+
+    this.initialized.emit();
     
     this.fsDiagramObjects.changes
       .pipe(
         switchMap((fsDiagramObjects: QueryList<FsDiagramObjectDirective>) => {
           return this.processDiff(fsDiagramObjects);
+        }),
+        tap((fsDiagramObjects) => {
+          this.diagramObjectsAdded.emit(fsDiagramObjects);
         }),
         takeUntil(this._destroy$),
       )
@@ -181,14 +197,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     const targetDiagram: FsDiagramObjectDirective = this.diagramObjects.get(target);
 
     this._connect(sourceDiagram, targetDiagram, config);
-    // if (
-    //   !sourceDiagram || !sourceDiagram.initalized ||
-    //   !targetDiagram || !targetDiagram.initalized
-    // ) {
-    //   this._connects.push({ source: source, target: target, config: config });
-
-    //   return;
-    // }
   }
 
   public getObjectsConnections(object1: object, object2: object): DiagramConnection[] {

@@ -64,7 +64,6 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   @HostBinding('attr.id') 
   public attrId = `diagram-object-${guid()}`;
   
-
   private _connectionDragSelector: ConnectionDragSelector;
   private _mouseDownEvent;
   private _mouseUpEvent;

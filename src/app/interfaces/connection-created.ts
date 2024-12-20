@@ -1,11 +1,10 @@
-import { FsDiagramObjectDirective } from './../directives/diagram-object/diagram-object.directive';
-import { ConnectionActor } from './../helpers/enums';
 import { DiagramConnection } from './../classes/diagram-connection';
+import { ConnectionActor } from './../helpers/enums';
 
 
 export interface ConnectionCreated {
   connection: DiagramConnection,
-  target: FsDiagramObjectDirective,
-  source: FsDiagramObjectDirective,
+  target: any,
+  source: any,
   actor: ConnectionActor
 }

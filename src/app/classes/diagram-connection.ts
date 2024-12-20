@@ -1,6 +1,8 @@
-import { NgZone } from '@angular/core';
 
-import { Connection, EVENT_CONNECTION_CLICK, EVENT_CONNECTION_MOUSEOUT, EVENT_CONNECTION_MOUSEOVER, LabelOverlay, Overlay } from '@jsplumb/browser-ui';
+import {
+  Connection, EVENT_CONNECTION_CLICK, EVENT_CONNECTION_MOUSEOUT,
+  EVENT_CONNECTION_MOUSEOVER, LabelOverlay,
+} from '@jsplumb/browser-ui';
 
 import { FsDiagramDirective } from '../directives/diagram';
 import { ConnectionOverlayType } from '../helpers/enums';
@@ -18,8 +20,6 @@ export class DiagramConnection {
 
   private _diagram: FsDiagramDirective;
   private _config: ConnectionConfig = {};
-  private _ngZone: NgZone;
-  private _labelOverlay: Overlay;
 
   constructor( 
     diagram: FsDiagramDirective,
@@ -28,10 +28,6 @@ export class DiagramConnection {
     this.connection = connection;
     this._config = connection.getData()['connection-config'] || {};
     this._diagram = diagram;
-    // this._jsPlumb = diagramService.jsPlumb;
-    // this._diagramService = diagramService;
-    // this._diagramConfig = diagramService.diagramConfig;
-    // this._ngZone = diagramService.ngZone;
   }
 
   public get label(): ConnectionLabelConfig {
@@ -40,7 +36,24 @@ export class DiagramConnection {
 
   public setLabelContent(label) {
     const overlay: LabelOverlay = this.connection.getOverlay(this.labelId);
-    overlay.setLabel(label);
+    if(overlay) {
+      overlay.setLabel(label);
+    } else{
+      let cssClass = 'fs-diagram-connection-label';
+      if (this._config.click) {
+        cssClass += ' fs-diagram-clickable';
+      }
+
+      this.connection
+        .addOverlay({
+          type: ConnectionOverlayType.Label,
+          options: {
+            label,
+            cssClass: cssClass,
+            id: this.labelId,
+          },
+        });
+    }
   }
 
   public setLabel(label: ConnectionLabelConfig) {
@@ -96,29 +109,8 @@ export class DiagramConnection {
     }
 
     if (this._config.label) {
-      let cssClass = 'fs-diagram-connection-label';
-      if (this._config.click) {
-        cssClass += ' fs-diagram-clickable';
-      }
- 
-      this._labelOverlay = this.connection
-        .addOverlay({
-          type: ConnectionOverlayType.Label,
-          options: {
-            label: this._config.label.content,
-            cssClass: cssClass,
-            id: this.labelId,
-          },
-        });
+      this.setLabelContent(this._config.label.content);
     }
-
-    // if (this._diagram.config.sourcePoint.shape) {
-    //   this._addPoint(this._diagram.config.sourcePoint, this._config.Point, 'source');
-    // }
-
-    // if (this._diagramConfig.targetPoint.shape) {
-    //   this._addPoint(this._diagramConfig.targetPoint, this._config.targetPoint, 'target');
-    // }
   }
 
   private _bindTooltipEvent() {
@@ -174,15 +166,5 @@ export class DiagramConnection {
           }
         }
       });
-  }
-
-  private _addPoint(defaultConfig, config, name) {
-    const options = {
-      ...defaultConfig,
-      id: `${name}_${this.connection.id}`,
-      ...config, 
-    };
-
-    this.connection.addOverlay({ type: options.shape, options });
   }
 }
