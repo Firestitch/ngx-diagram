@@ -146,8 +146,8 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
       
       this.jsPlumb.bind(EVENT_DRAG_STOP, (e: DragStopPayload) => {
         if(e.el.isEqualNode(this.el)) {
-          const x1 = e.elements[0].pos[0];
-          const y1 = e.elements[0].pos[1];
+          const x1 = e.elements[0].pos.x;
+          const y1 = e.elements[0].pos.y;
           this.dragStop.emit({ event: e, data: this.data, x1, y1 });
           this._diagram.dragging = false;
         }
