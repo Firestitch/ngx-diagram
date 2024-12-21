@@ -16,18 +16,20 @@
       [config]="diagramConfig"
       (objectsAdded)="objectsAdded($event)"
       (connectionAdded)="connectionAdded($event)">
-    <div
-      fsDiagramObject
-      [targetable]="false"
-      class="start-object"
-      [x1]="60"
-      [y1]="60"
-      [data]="startObject"
-      [scale]="scale"
-      [id]="'startObject'"
-      [draggable]="false">
-    </div>
     @for (object of objects; track object; let index = $index) {
+    @if (index === 0) {
+      <div
+        fsDiagramObject
+        [targetable]="false"
+        class="start-object"
+        [x1]="60"
+        [y1]="60"
+        [data]="object"
+        [scale]="scale"
+        [id]="'startObject'"
+        [draggable]="false">
+      </div>
+    } @else {
       <div
           class="object"
           fsDiagramObject
@@ -99,6 +101,7 @@
           placement="south-west">
         </div>
       </div>
+    }
     }
   </div>
 </fs-zoom-pan>

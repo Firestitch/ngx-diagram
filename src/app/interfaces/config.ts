@@ -6,7 +6,7 @@ import {
   ConnectorElbowConfig,
   ConnectorStraightConfig,
 } from './connector-config';
-import { DiagramSourceConfig } from './diagram-config';
+import { ConnectionEndpointConfig } from './diagram-config';
 
 
 export interface ConnectionConfig {
@@ -16,8 +16,7 @@ export interface ConnectionConfig {
   connector?: ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig,
   tooltip?: ConnectionTooltipConfig,
   name?: string
-  point?: DiagramSourceConfig | boolean
-  targetPoint?: DiagramSourceConfig | boolean
+  targetEndpoint?: ConnectionEndpointConfig
 }
 
 export interface ConnectionLabelConfig {

@@ -1,7 +1,6 @@
 export enum ConnectionOverlayType {
   Label = 'Label',
   Tooltip = 'Tooltip',
-  Arrow = 'Arrow'
 }
 
 export enum ConnectorType {
@@ -16,7 +15,7 @@ export enum ConnectionActor {
   Api
 }
 
-export enum PointShape {
+export enum EndpointShape {
   Arrow = 'Arrow',
   PlainArrow = 'PlainArrow',
   Diamond = 'Diamond',

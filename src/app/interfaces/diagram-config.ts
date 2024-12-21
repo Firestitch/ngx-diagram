@@ -1,4 +1,5 @@
-import { PointShape } from '../helpers/enums';
+
+import { EndpointShape } from '../helpers/enums';
 
 import {
   ConnectorArchConfig,
@@ -13,16 +14,15 @@ import { PaintStyleConfig } from './paint-style-config';
 export interface DiagramConfig {
   paintStyle?: PaintStyleConfig;
   hoverPaintStyle?: HoverPaintStyleConfig;
-  Point?: DiagramSourceConfig;
-  targetPoint?: DiagramSourceConfig;
+  targetEndpoint?: ConnectionEndpointConfig;
   connector?: ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig
 }
 
-export interface DiagramSourceConfig {
+export interface ConnectionEndpointConfig {
   length?: number;
   width?: number;
   foldback?: number;
   location?: number;
-  shape?: PointShape;
+  shape?: EndpointShape;
   direction?: number;
 }

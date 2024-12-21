@@ -14,9 +14,9 @@ import {
   ConnectorType,
   DiagramConfig,
   DiagramConnection,
+  EndpointShape,
   FsDiagramDirective,
   FsDiagramObjectDirective,
-  PointShape,
 } from '@firestitch/diagram';
 
 import { random } from 'lodash-es';
@@ -34,9 +34,8 @@ export class ExampleComponent implements OnInit {
   public diagram: FsDiagramDirective;
 
   public objects = [];
-  public PointShape = PointShape;
+  public EndpointShape = EndpointShape;
   public scale = 1;
-  public startObject = {};
   public diagramConfig: DiagramConfig = {
     paintStyle: {
     },
@@ -47,7 +46,7 @@ export class ExampleComponent implements OnInit {
   public ngOnInit() {
     this.diagramConfig = {};
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i <= 3; i++) {
       this.add();
     }
 
@@ -79,8 +78,8 @@ export class ExampleComponent implements OnInit {
     this._cdRef.markForCheck();
   }
 
-  public objectsAdded(diagramObjectDirectives: FsDiagramObjectDirective[]) {
-    const config: ConnectionConfig = {
+  public get config(): ConnectionConfig {
+    return {
       label: {
         content: 'Label',
       },
@@ -90,16 +89,19 @@ export class ExampleComponent implements OnInit {
       click: () => {
         console.log('Connection clicked');
       },
+      targetEndpoint: {
+        shape: EndpointShape.Arrow,
+      },
     };
+  }
 
+  public objectsAdded(diagramObjectDirectives: FsDiagramObjectDirective[]) {
     diagramObjectDirectives
-      .reverse()
       .forEach((diagramObjectDirective: FsDiagramObjectDirective) => {
-        if(diagramObjectDirective.data.id) {
-          const previousObject = this.objects[diagramObjectDirective.data.index - 1];
-
+        const previousObject = this.objects[diagramObjectDirective.data.index - 1];
+        if(previousObject) {
           this.diagram
-            .connect(diagramObjectDirective.data, previousObject || this.startObject, config); 
+            .connect(previousObject, diagramObjectDirective.data, this.config); 
         }
       });
   }
@@ -114,7 +116,9 @@ export class ExampleComponent implements OnInit {
   public updateLabel(object) {
     this.diagram.getObjectConnections(object)
       .forEach((connection: DiagramConnection) => {
-        connection.setLabel('Updated Label');
+        connection.setLabel({
+          content: 'Updated Label',
+        });
       });
   }
 
@@ -123,7 +127,7 @@ export class ExampleComponent implements OnInit {
       label: {
         content: 'google.com',
       },
-      targetPoint: {
+      targetEndpoint: {
         location: .15,
         direction: 1,
       },
@@ -140,8 +144,18 @@ export class ExampleComponent implements OnInit {
 
   public connectionAdded(event: ConnectionAdded) {
     console.log('connectionAdded', event);
-    event.connection.setLabel('New Connection');
-    event.connection.setTooltip('New Connection Tooltip');
+
+    event.connection.setLabel({
+      content: 'New Connection',
+    });
+
+    event.connection.setTooltip({
+      content: 'New Connection Tooltip',
+    });
+    
+    event.connection.setTargetEndpoint({
+      shape: EndpointShape.Arrow,
+    });
   }
 
   public connectionLabelClick(e: ConnectionEvent) {

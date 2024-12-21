@@ -23,9 +23,9 @@ import {
 } from '@jsplumb/browser-ui';
 
 import { DiagramConnection } from '../../classes/diagram-connection';
-import { ConnectorType, PointShape } from '../../helpers/enums';
+import { ConnectorType, EndpointShape } from '../../helpers/enums';
+import { ConnectionConfig } from '../../interfaces/config';
 import { ConnectionAdded } from '../../interfaces/connection-added';
-import { ConnectionConfig } from '../../interfaces/connection-config';
 import { DiagramConfig } from '../../interfaces/diagram-config';
 import { FsDiagramObjectDirective } from '../diagram-object';
 
@@ -78,6 +78,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
           );
 
           diagramConnection.render();
+          
           if(event) {
             const targetDirective = Array.from(this.diagramObjects.values())
               .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.target));
@@ -289,22 +290,14 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       ...this.config.hoverPaintStyle, 
     };
 
-    this.config.Point = { 
-      length: 10,
-      direction: 0,
-      location: 0,
-      width: 10,
-      foldback: 1, 
-      ...this.config.Point };
-
-    this.config.targetPoint = { 
+    this.config.targetEndpoint = { 
       length: 10,
       direction: 1,
       location: 1,
       width: 10,
       foldback: 1,
-      shape: PointShape.Arrow,
-      ...this.config.targetPoint, 
+      shape: EndpointShape.Arrow,
+      ...this.config.targetEndpoint, 
     };
 
     this.config.connector = { 

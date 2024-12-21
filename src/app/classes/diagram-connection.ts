@@ -8,11 +8,14 @@ import { FsDiagramDirective } from '../directives/diagram';
 import { ConnectionOverlayType } from '../helpers/enums';
 import {
   ConnectionConfig, ConnectionEvent, ConnectionLabelConfig,
-} from '../interfaces/connection-config';
+  ConnectionTooltipConfig,
+} from '../interfaces/config';
+import { ConnectionEndpointConfig } from '../interfaces/diagram-config';
 
 import {
   ConnectorArchConfig, ConnectorCurveConfig, ConnectorElbowConfig, ConnectorStraightConfig,
 } from './../interfaces/connector-config';
+
 
 export class DiagramConnection {
 
@@ -34,10 +37,35 @@ export class DiagramConnection {
     return this._config.label || {};
   }
 
-  public setLabel(label: string) {
+  public setTargetEndpoint(endpoint: ConnectionEndpointConfig) {
+    endpoint = { 
+      ...this._diagram.config.targetEndpoint, 
+      ...endpoint, 
+    };
+
+    const overlay: LabelOverlay = this.connection.getOverlay(this.targetEndpointId);
+    if(overlay) {
+      // TODO: Update overlay
+    } else{
+      this.connection
+        .addOverlay({
+          type: endpoint.shape,
+          options: {
+            foldback: endpoint.foldback,
+            width: endpoint.width,
+            length: endpoint.length,
+            location: 1,
+            direction: 1,
+            id: this.targetEndpointId,
+          },
+        });
+    }
+  }
+
+  public setLabel(config: ConnectionLabelConfig) {
     const overlay: LabelOverlay = this.connection.getOverlay(this.labelId);
     if(overlay) {
-      overlay.setLabel(label);
+      overlay.setLabel(config.content);
     } else{
       let cssClass = 'fs-diagram-connection-label';
       if (this._config.click) {
@@ -48,7 +76,7 @@ export class DiagramConnection {
         .addOverlay({
           type: ConnectionOverlayType.Label,
           options: {
-            label,
+            label: config.content,
             cssClass: cssClass,
             id: this.labelId,
           },
@@ -56,17 +84,16 @@ export class DiagramConnection {
     }
   }
   
-
-  public setTooltip(label: string) {
+  public setTooltip(config: ConnectionTooltipConfig) {
     const overlay: LabelOverlay = this.connection.getOverlay(this.tooltipId);
     if(overlay) {
-      overlay.setLabel(label);
+      overlay.setLabel(config.content);
     } else{
       this.connection
         .addOverlay({
           type: ConnectionOverlayType.Label,
           options: {
-            label,
+            label: config.content,
             cssClass: 'fs-diagram-connection-tooltip-overlay',
             id: this.tooltipId,
           },
@@ -90,6 +117,10 @@ export class DiagramConnection {
     this.connection.unbind();
   }
 
+  public get targetEndpointId() {
+    return `target-endpoint-${this.connection.id}`;
+  }
+
   public get labelId() {
     return `label-${this.connection.id}`;
   }
@@ -98,36 +129,34 @@ export class DiagramConnection {
     return `tooltip-${this.connection.id}`;
   }
 
-  // eslint-disable-next-line max-statements
   public render() {
     if (this._config.connector) {
       this.setConnector(this._config.connector);
     }
 
-    // if (this._config.data) {
-    //   forOwn(this._config.data, (value, name) => {
-    //     this.connection.setData({
-    //       [name]: value,
-    //     });
-    //   });
-    // }
-
     this.connection.addClass('fs-diagram-connection');
     this.connection.scope = this._config.name;
 
     this._bindClickEvent();
-    this._bindTooltipEvent();
+    this._bindTooltip();
+    this._bindTargetEndpoint();
 
     if (this._config.click) {
       this.connection.addClass('fs-diagram-clickable');
     }
 
     if (this._config.label) {
-      this.setLabel(this._config.label.content);
+      this.setLabel(this._config.label);
     }
   }
 
-  private _bindTooltipEvent() {
+  private _bindTargetEndpoint() {
+    if(this._config.targetEndpoint) {
+      this.setTargetEndpoint(this._config.targetEndpoint);
+    }
+  }
+
+  private _bindTooltip() {
     if (!this._config.tooltip) {
       return;
     }
@@ -155,7 +184,7 @@ export class DiagramConnection {
         }
       });
  
-    this.setTooltip(this._config.tooltip.content);
+    this.setTooltip(this._config.tooltip);
   }
 
   private _bindClickEvent() {

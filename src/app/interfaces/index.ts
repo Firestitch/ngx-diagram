@@ -1,5 +1,5 @@
+export * from './config';
 export * from './connection-added';
-export * from './connection-config';
 export * from './connection-overlay-config';
 export * from './connector-config';
 export * from './diagram-config';
