@@ -78,7 +78,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
           );
 
           diagramConnection.render();
-          
+
           if(event) {
             const targetDirective = Array.from(this.diagramObjects.values())
               .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.target));
@@ -189,11 +189,11 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     this.jsPlumb.setSuspendDrawing(false, true);
   }
 
-  public connect(source: any, target: any, config: ConnectionConfig = {}) {
+  public connect(source: any, target: any, config: ConnectionConfig = {}): DiagramConnection {
     const sourceDiagram: FsDiagramObjectDirective = this.diagramObjects.get(source);
     const targetDiagram: FsDiagramObjectDirective = this.diagramObjects.get(target);
 
-    this._connect(sourceDiagram, targetDiagram, config);
+    return this._connect(sourceDiagram, targetDiagram, config);
   }
 
   public getObjectsConnections(object1: object, object2: object): DiagramConnection[] {
@@ -265,7 +265,11 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       .find(find);
   }
 
-  private _connect(sourceDiagram: any, targetDiagram: any, config: ConnectionConfig = {}) {
+  private _connect(
+    sourceDiagram: any, 
+    targetDiagram: any, 
+    config: ConnectionConfig = {},
+  ): DiagramConnection {
     const connection = this.jsPlumb.connect({
       source: sourceDiagram.el,
       target: targetDiagram.el,
@@ -274,7 +278,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       },
     });
 
-    return connection;
+    return new DiagramConnection(this, connection);
   }
 
   private _initConfig() {

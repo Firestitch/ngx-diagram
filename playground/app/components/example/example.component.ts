@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   inject,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -19,6 +20,8 @@ import {
   FsDiagramObjectDirective,
 } from '@firestitch/diagram';
 
+import { Subject, takeUntil } from 'rxjs';
+
 import { random } from 'lodash-es';
 
 
@@ -28,7 +31,7 @@ import { random } from 'lodash-es';
   styleUrls: ['./example.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ExampleComponent implements OnInit {
+export class ExampleComponent implements OnInit, OnDestroy {
 
   @ViewChild(FsDiagramDirective, { static: true })
   public diagram: FsDiagramDirective;
@@ -42,6 +45,12 @@ export class ExampleComponent implements OnInit {
   };
 
   private _cdRef = inject(ChangeDetectorRef);
+  private _destroy$ = new Subject<void>();
+
+  public ngOnDestroy(): void {
+    this._destroy$.next();
+    this._destroy$.complete();
+  }
 
   public ngOnInit() {
     this.diagramConfig = {};
@@ -100,8 +109,10 @@ export class ExampleComponent implements OnInit {
       .forEach((diagramObjectDirective: FsDiagramObjectDirective) => {
         const previousObject = this.objects[diagramObjectDirective.data.index - 1];
         if(previousObject) {
-          this.diagram
+          const diagramConnection = this.diagram
             .connect(previousObject, diagramObjectDirective.data, this.config); 
+
+          this._updateDiagramConnection(diagramConnection);
         }
       });
   }
@@ -142,20 +153,32 @@ export class ExampleComponent implements OnInit {
     this.diagram.connect(object, object, config);
   }
 
-  public connectionAdded(event: ConnectionAdded) {
-    console.log('connectionAdded', event);
-
-    event.connection.setLabel({
+  public _updateDiagramConnection(diagramConnection: DiagramConnection) {
+    diagramConnection.setLabel({
       content: 'New Connection',
     });
 
-    event.connection.setTooltip({
+    diagramConnection.setTooltip({
       content: 'New Connection Tooltip',
     });
     
-    event.connection.setTargetEndpoint({
+    diagramConnection.setTargetEndpoint({
       shape: EndpointShape.Arrow,
     });
+
+    diagramConnection.click$
+      .pipe(
+        takeUntil(this._destroy$),
+      )
+      .subscribe((e: ConnectionEvent) => {
+        console.log('Connection clicked', e);
+      });
+  }
+
+  public connectionAdded(event: ConnectionAdded) {
+    console.log('connectionAdded', event);
+
+    this._updateDiagramConnection(event.connection);
   }
 
   public connectionLabelClick(e: ConnectionEvent) {
