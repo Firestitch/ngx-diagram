@@ -1,5 +1,4 @@
 
-import { Observable, Subject, takeUntil } from 'rxjs';
 
 import {
   Connection, EVENT_CONNECTION_CLICK, EVENT_CONNECTION_MOUSEOUT,
@@ -25,8 +24,6 @@ export class DiagramConnection {
 
   private _diagram: FsDiagramDirective;
   private _config: ConnectionConfig = {};
-  private _click$ = new Subject<ConnectionEvent>();
-  private _destroy$ = new Subject<void>();
 
   constructor( 
     diagram: FsDiagramDirective,
@@ -41,11 +38,8 @@ export class DiagramConnection {
     return this._config.label || {};
   }
 
-  public get click$(): Observable<ConnectionEvent> {
-    return this._click$.asObservable()
-      .pipe(
-        takeUntil(this._destroy$),
-      );
+  public setClick(func: (event?: ConnectionEvent) => void) {
+    this._config.click = func;
   }
 
   public setTargetEndpoint(endpoint: ConnectionEndpointConfig) {
@@ -126,9 +120,6 @@ export class DiagramConnection {
 
     this.connection.removeAllOverlays();
     this.connection.unbind();
-
-    this._destroy$.next();
-    this._destroy$.complete();
   }
 
   public get targetEndpointId() {
@@ -211,8 +202,6 @@ export class DiagramConnection {
             connection: this,
           };
 
-          this._click$.next(connectonEvent);
-    
           if (this._config.click) {
             this._config.click(connectonEvent);
           }

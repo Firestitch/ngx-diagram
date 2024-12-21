@@ -20,7 +20,7 @@ import {
   FsDiagramObjectDirective,
 } from '@firestitch/diagram';
 
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { random } from 'lodash-es';
 
@@ -95,9 +95,6 @@ export class ExampleComponent implements OnInit, OnDestroy {
       tooltip: {
         content: 'Connection Tooltip',
       },
-      click: () => {
-        console.log('Connection clicked');
-      },
       targetEndpoint: {
         shape: EndpointShape.Arrow,
       },
@@ -165,14 +162,10 @@ export class ExampleComponent implements OnInit, OnDestroy {
     diagramConnection.setTargetEndpoint({
       shape: EndpointShape.Arrow,
     });
-
-    diagramConnection.click$
-      .pipe(
-        takeUntil(this._destroy$),
-      )
-      .subscribe((e: ConnectionEvent) => {
-        console.log('Connection clicked', e);
-      });
+    
+    diagramConnection.setClick(() => {
+      console.log('Connection clicked');
+    });
   }
 
   public connectionAdded(event: ConnectionAdded) {
