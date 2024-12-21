@@ -110,7 +110,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
     return this._diagram.jsPlumb;
   }
 
-  public get el(): Element {
+  public get el(): HTMLElement {
     return this.elementRef.nativeElement;
   }
   
