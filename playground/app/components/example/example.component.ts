@@ -8,9 +8,8 @@ import {
 } from '@angular/core';
 
 import {
-  ConnectionActor,
+  ConnectionAdded,
   ConnectionConfig,
-  ConnectionCreated,
   ConnectionEvent,
   ConnectorType,
   DiagramConfig,
@@ -20,7 +19,7 @@ import {
   PointShape,
 } from '@firestitch/diagram';
 
-import { cloneDeep, random } from 'lodash-es';
+import { random } from 'lodash-es';
 
 
 @Component({
@@ -31,7 +30,7 @@ import { cloneDeep, random } from 'lodash-es';
 })
 export class ExampleComponent implements OnInit {
 
-  @ViewChild(FsDiagramDirective)
+  @ViewChild(FsDiagramDirective, { static: true })
   public diagram: FsDiagramDirective;
 
   public objects = [];
@@ -64,23 +63,26 @@ export class ExampleComponent implements OnInit {
     this._cdRef.markForCheck();
   }
 
-  public clone() {
-    this.objects = cloneDeep(this.objects);
-  }
-
   public add() {
     const x1 = random(0, 1000);
     const y1 = random(0, 500);
-    const idx = this.objects.length;
-    const object = { name: `Object ${idx + 1}`, x1, y1, id: idx + 1 };
+    const index = this.objects.length;
+    const object = {
+      name: `Object ${index + 1}`,
+      x1,
+      y1,
+      id: index + 1,
+      index,
+    };
 
     this.objects.push(object);
     this._cdRef.markForCheck();
+  }
 
+  public objectsAdded(diagramObjectDirectives: FsDiagramObjectDirective[]) {
     const config: ConnectionConfig = {
-      name: `label-${idx}`,
       label: {
-        content: `Label ${idx + 1}`,
+        content: 'Label',
       },
       tooltip: {
         content: 'Connection Tooltip',
@@ -89,9 +91,17 @@ export class ExampleComponent implements OnInit {
         console.log('Connection clicked');
       },
     };
-  }
 
-  public diagramObjectsAdded(diagramObjects: FsDiagramObjectDirective[]) {
+    diagramObjectDirectives
+      .reverse()
+      .forEach((diagramObjectDirective: FsDiagramObjectDirective) => {
+        if(diagramObjectDirective.data.id) {
+          const previousObject = this.objects[diagramObjectDirective.data.index - 1];
+
+          this.diagram
+            .connect(diagramObjectDirective.data, previousObject || this.startObject, config); 
+        }
+      });
   }
 
   public repaint(data) {
@@ -104,7 +114,7 @@ export class ExampleComponent implements OnInit {
   public updateLabel(object) {
     this.diagram.getObjectConnections(object)
       .forEach((connection: DiagramConnection) => {
-        connection.setLabelContent('Updated Label');
+        connection.setLabel('Updated Label');
       });
   }
 
@@ -128,13 +138,10 @@ export class ExampleComponent implements OnInit {
     this.diagram.connect(object, object, config);
   }
 
-  public connectionCreated(event: ConnectionCreated) {
-
-    console.log('connectionCreated', event);
-
-    if (event.actor === ConnectionActor.User) {
-      event.connection.setLabelContent('New Connection');
-    }
+  public connectionAdded(event: ConnectionAdded) {
+    console.log('connectionAdded', event);
+    event.connection.setLabel('New Connection');
+    event.connection.setTooltip('New Connection Tooltip');
   }
 
   public connectionLabelClick(e: ConnectionEvent) {

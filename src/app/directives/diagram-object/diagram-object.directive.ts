@@ -20,7 +20,6 @@ import {
 } from '@jsplumb/browser-ui';
 
 import { DiagramConnection } from '../../classes/diagram-connection';
-import { ConnectionConfig } from '../../interfaces';
 import { FsDiagramDirective } from '../diagram/diagram.directive';
 
 
@@ -32,10 +31,6 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   @Input() public data;
   @Input() public scale = 1;
   @Input() public id: string;
-  @Input() public connections: {
-    target: any,
-    config: ConnectionConfig,
-  }[] = [];
   @Input() public selfTargetable = true;
   @Input() public targetable = true;
 

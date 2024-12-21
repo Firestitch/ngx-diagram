@@ -34,7 +34,7 @@ export class DiagramConnection {
     return this._config.label || {};
   }
 
-  public setLabelContent(label) {
+  public setLabel(label: string) {
     const overlay: LabelOverlay = this.connection.getOverlay(this.labelId);
     if(overlay) {
       overlay.setLabel(label);
@@ -55,9 +55,23 @@ export class DiagramConnection {
         });
     }
   }
+  
 
-  public setLabel(label: ConnectionLabelConfig) {
-    this._config.label = label;
+  public setTooltip(label: string) {
+    const overlay: LabelOverlay = this.connection.getOverlay(this.tooltipId);
+    if(overlay) {
+      overlay.setLabel(label);
+    } else{
+      this.connection
+        .addOverlay({
+          type: ConnectionOverlayType.Label,
+          options: {
+            label,
+            cssClass: 'fs-diagram-connection-tooltip-overlay',
+            id: this.tooltipId,
+          },
+        });
+    }
   }
 
   public setConnector(
@@ -109,7 +123,7 @@ export class DiagramConnection {
     }
 
     if (this._config.label) {
-      this.setLabelContent(this._config.label.content);
+      this.setLabel(this._config.label.content);
     }
   }
 
@@ -140,15 +154,8 @@ export class DiagramConnection {
             });
         }
       });
-  
-    this.connection.addOverlay({
-      type: ConnectionOverlayType.Label,
-      options: {
-        label: this._config.tooltip.content,
-        id: this.tooltipId,
-        cssClass: 'fs-diagram-connection-tooltip-overlay',
-      },
-    });
+ 
+    this.setTooltip(this._config.tooltip.content);
   }
 
   private _bindClickEvent() {

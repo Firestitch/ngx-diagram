@@ -14,7 +14,7 @@ import {
   QueryList,
 } from '@angular/core';
 
-import { forkJoin, Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import {
@@ -23,9 +23,9 @@ import {
 } from '@jsplumb/browser-ui';
 
 import { DiagramConnection } from '../../classes/diagram-connection';
-import { ConnectionActor, ConnectorType, PointShape } from '../../helpers/enums';
+import { ConnectorType, PointShape } from '../../helpers/enums';
+import { ConnectionAdded } from '../../interfaces/connection-added';
 import { ConnectionConfig } from '../../interfaces/connection-config';
-import { ConnectionCreated } from '../../interfaces/connection-created';
 import { DiagramConfig } from '../../interfaces/diagram-config';
 import { FsDiagramObjectDirective } from '../diagram-object';
 
@@ -37,15 +37,15 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
   @HostBinding('class.fs-diagram') public classFsDiagram = true;
 
-  @Output() public diagramObjectsAdded = new EventEmitter<FsDiagramObjectDirective[]>();
-  @Output() public initialized = new EventEmitter<void>();
+  @Output() public objectsAdded = new EventEmitter<FsDiagramObjectDirective[]>();
+  @Output() public initialized = new EventEmitter<FsDiagramObjectDirective[]>();
 
-  @Output() public connectionCreated = new EventEmitter<ConnectionCreated>();
+  @Output() public connectionAdded = new EventEmitter<ConnectionAdded>();
   
   @Input() public config: DiagramConfig = {};
 
   @ContentChildren(FsDiagramObjectDirective) 
-  public fsDiagramObjects: QueryList<FsDiagramObjectDirective>;
+  public diagramObjectsDirectives: QueryList<FsDiagramObjectDirective>;
 
   public dragging = false;
   public diagramObjects = new Map<any, FsDiagramObjectDirective>();
@@ -78,21 +78,21 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
           );
 
           diagramConnection.render();
+          if(event) {
+            const targetDirective = Array.from(this.diagramObjects.values())
+              .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.target));
 
-          const targetDirective = Array.from(this.diagramObjects.values())
-            .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.target));
+            const sourceDirective = Array.from(this.diagramObjects.values())
+              .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.source));
 
-          const sourceDirective = Array.from(this.diagramObjects.values())
-            .find((fsDiagramObject) => fsDiagramObject.el.isEqualNode(connectionEvent.connection.source));
+            const connectionAdded: ConnectionAdded = {
+              connection: diagramConnection,
+              target: targetDirective,
+              source: sourceDirective,
+            };
 
-          const connectionCreated: ConnectionCreated = {
-            connection: diagramConnection,
-            target: targetDirective?.data,
-            source: sourceDirective?.data,
-            actor: event ? ConnectionActor.User : ConnectionActor.Api,
-          };
-
-          this.connectionCreated.emit(connectionCreated);
+            this.connectionAdded.emit(connectionAdded);
+          }
         }
       });
 
@@ -143,43 +143,39 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     this._destroy$.complete();
   }
 
-  public processDiff(fsDiagramObjects: QueryList<FsDiagramObjectDirective>): Observable<any> {
-    const diff = this._differ.diff(fsDiagramObjects);
+  public processDiff(
+    diagramObjectsDirectives: QueryList<FsDiagramObjectDirective>,
+  ): Observable<FsDiagramObjectDirective[]> {
+    const diff = this._differ.diff(diagramObjectsDirectives);
     if (diff) {
-      const diagramObjects = [];
+      const addedDiagramObjectDirectives: FsDiagramObjectDirective[] = [];
 
       diff
         .forEachAddedItem((change) => {
           change.item.init();
-          diagramObjects.push(change.item);
-        });
-        
-      diff
-        .forEachAddedItem((change) => {
-          change.item.connections.forEach((connection) => {
-            this.connect(change.item.data, connection.target, connection.config);
-          });
+          addedDiagramObjectDirectives.push(change.item);
         });
 
-      return of(diagramObjects);
+      return of(addedDiagramObjectDirectives);
     }
 
     return of([]);
   }
 
   public ngAfterViewInit(): void {
-    this.processDiff(this.fsDiagramObjects)
-      .subscribe();
-
-    this.initialized.emit();
+    this.processDiff(this.diagramObjectsDirectives)
+      .subscribe((addedDiagramObjectDirectives) => {
+        this.objectsAdded.emit(addedDiagramObjectDirectives);
+        this.initialized.emit(addedDiagramObjectDirectives);
+      });
     
-    this.fsDiagramObjects.changes
+    this.diagramObjectsDirectives.changes
       .pipe(
-        switchMap((fsDiagramObjects: QueryList<FsDiagramObjectDirective>) => {
-          return this.processDiff(fsDiagramObjects);
+        switchMap((diagramObjectsDirectives: QueryList<FsDiagramObjectDirective>) => {
+          return this.processDiff(diagramObjectsDirectives);
         }),
-        tap((fsDiagramObjects) => {
-          this.diagramObjectsAdded.emit(fsDiagramObjects);
+        tap((addedDiagramObjectDirectives) => {
+          this.objectsAdded.emit(addedDiagramObjectDirectives);
         }),
         takeUntil(this._destroy$),
       )
@@ -268,26 +264,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       .find(find);
   }
 
-  private _processObjectDirectives(initalizedDirectives$, connects) {
-    return new Observable((observer) => {
-      this.suspendRendering(() => {
-
-        forkJoin(...initalizedDirectives$)
-          .pipe(
-            takeUntil(this._destroy$),
-          )
-          .subscribe(() => {
-            connects.forEach((item) => {
-              this._connect(item.source, item.target, item.config);
-            });
-
-            observer.next(null);
-            observer.complete();
-          });
-      });
-    });
-  }
-
   private _connect(sourceDiagram: any, targetDiagram: any, config: ConnectionConfig = {}) {
     const connection = this.jsPlumb.connect({
       source: sourceDiagram.el,
@@ -301,8 +277,6 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private _initConfig() {
-    
-
     this.config.paintStyle = { 
       stroke: '#2196f3',
       strokeWidth: 2, 
