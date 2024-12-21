@@ -152,6 +152,9 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
     this.jsPlumb.addEndpoint(this.el, {
       ...this._diagram.defaultConfig,
       source: true,
+      data: {
+        'asasd': 'asddsa',
+      },
     });
 
     if (this.targetable || this.selfTargetable) {

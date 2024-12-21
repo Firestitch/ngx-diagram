@@ -164,7 +164,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
     });
     
     diagramConnection.setClick(() => {
-      console.log('Connection clicked');
+      console.log('Connection clicked', diagramConnection.target, diagramConnection.source);
     });
   }
 

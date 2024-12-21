@@ -6,6 +6,7 @@ import {
 } from '@jsplumb/browser-ui';
 
 import { FsDiagramDirective } from '../directives/diagram';
+import { FsDiagramObjectDirective } from '../directives/diagram-object';
 import { ConnectionOverlayType } from '../helpers/enums';
 import {
   ConnectionConfig, ConnectionEvent, ConnectionLabelConfig,
@@ -32,6 +33,20 @@ export class DiagramConnection {
     this._diagram = diagram;
     this.connection = connection;
     this._config = connection.getData()['connection-config'] || {};
+  }
+
+  public get target(): FsDiagramObjectDirective {
+    return Array.from(this._diagram.diagramObjects.values())
+      .find((item: FsDiagramObjectDirective)=> {
+        return item.el.isEqualNode(this.connection.target);
+      });
+  }
+
+  public get source(): FsDiagramObjectDirective {
+    return Array.from(this._diagram.diagramObjects.values())
+      .find((item: FsDiagramObjectDirective)=> {
+        return item.el.isEqualNode(this.connection.source);
+      });
   }
 
   public get label(): ConnectionLabelConfig {
