@@ -204,13 +204,21 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       return [];
     }
 
-    const connections = this.jsPlumb
-      .getConnections({
-        source: [object1Diagram.el],
-        target: [object2Diagram.el],
+    return this._jsPlumb
+      .connections
+      .filter((connection) => {
+        return (
+          connection.source.isEqualNode(object1Diagram.el) && 
+          connection.target.isEqualNode(object2Diagram.el)
+        ) || 
+        (
+          connection.source.isEqualNode(object2Diagram.el) && 
+          connection.target.isEqualNode(object1Diagram.el)
+        );
+      })
+      .map((connection) => {
+        return new DiagramConnection(this, connection);
       });
-
-    return this._mapConnections(connections);
   }
   
   public getObjectConnections(object: object): DiagramConnection[] {
@@ -220,26 +228,15 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
       return [];
     }
 
-    const connections1 = Object.values(
-      this.jsPlumb.getConnections({
-        source: objectDiagram.el,
-        scope: ['*'],
-      }),
-    );
-
-    const connections2 = Object.values(
-      this.jsPlumb.getConnections({
-        target: objectDiagram.el,
-        scope: ['*'],
-      }),
-    );  
-
-    const connections: any[] = [
-      ...connections1,
-      ...connections2,
-    ];
-
-    return this._mapConnections(connections);
+    return this._jsPlumb
+      .connections
+      .filter((connection) => {
+        return connection.source.isEqualNode(objectDiagram.el) || 
+        connection.target.isEqualNode(objectDiagram.el);
+      })
+      .map((connection) => {
+        return new DiagramConnection(this, connection);
+      }); 
   }
   
   public getScopeConnections(scope: string[]): DiagramConnection[] {
