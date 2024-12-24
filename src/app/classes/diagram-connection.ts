@@ -1,5 +1,7 @@
 
 
+import { guid } from '@firestitch/common';
+
 import {
   Connection, EVENT_CONNECTION_CLICK, EVENT_CONNECTION_MOUSEOUT,
   EVENT_CONNECTION_MOUSEOVER, LabelOverlay,
@@ -33,7 +35,7 @@ export class DiagramConnection {
     this._diagram = diagram;
     this.connection = connection;
     this._config = connection.getData()['connection-config'] || {};
-    this.id = this._config.id;
+    this.id = this._config.id || guid();
   }
 
   public get target(): FsDiagramObjectDirective {
