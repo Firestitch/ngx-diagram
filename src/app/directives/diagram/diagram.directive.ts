@@ -250,6 +250,11 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     return this._mapConnections(this.jsPlumb.getConnections({ scope: '*' }));
   }
 
+  public findConnections(find: (connection: DiagramConnection) => boolean): DiagramConnection[] {
+    return this.getConnections()
+      .filter(find);
+  }
+
   public repaint() {
     this.jsPlumb.repaintEverything();
   }
@@ -270,13 +275,14 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
     targetDiagram: any, 
     config: ConnectionConfig = {},
   ): DiagramConnection {
-    const connection = this.jsPlumb.connect({
-      source: sourceDiagram.el,
-      target: targetDiagram.el,
-      data: {
-        'connection-config': config,
-      },
-    });
+    const connection = this.jsPlumb
+      .connect({
+        source: sourceDiagram.el,
+        target: targetDiagram.el,
+        data: {
+          'connection-config': config,
+        },
+      });
 
     return new DiagramConnection(this, connection);
   }

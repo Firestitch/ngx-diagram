@@ -124,9 +124,9 @@ export class ExampleComponent implements OnInit, OnDestroy {
   public updateLabel(object) {
     this.diagram.getObjectConnections(object)
       .forEach((connection: DiagramConnection) => {
-        connection.setLabel({
+        connection.label = {
           content: 'Updated Label',
-        });
+        };
       });
   }
 
@@ -151,21 +151,21 @@ export class ExampleComponent implements OnInit, OnDestroy {
   }
 
   public _updateDiagramConnection(diagramConnection: DiagramConnection) {
-    diagramConnection.setLabel({
+    diagramConnection.label = {
       content: 'New Connection',
-    });
+    };
 
-    diagramConnection.setTooltip({
+    diagramConnection.tooltip = {
       content: 'New Connection Tooltip',
-    });
+    };
     
-    diagramConnection.setTargetEndpoint({
+    diagramConnection.targetEndpoint = {
       shape: EndpointShape.Arrow,
-    });
+    };
     
-    diagramConnection.setClick(() => {
+    diagramConnection.click = () => {
       console.log('Connection clicked', diagramConnection.target, diagramConnection.source);
-    });
+    };
   }
 
   public connectionAdded(event: ConnectionAdded) {

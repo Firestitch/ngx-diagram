@@ -33,6 +33,7 @@ export class DiagramConnection {
     this._diagram = diagram;
     this.connection = connection;
     this._config = connection.getData()['connection-config'] || {};
+    this.id = this._config.id;
   }
 
   public get target(): FsDiagramObjectDirective {
@@ -49,15 +50,16 @@ export class DiagramConnection {
       });
   }
 
-  public get label(): ConnectionLabelConfig {
-    return this._config.label || {};
-  }
-
-  public setClick(func: (event?: ConnectionEvent) => void) {
+  public set click(func: (event?: ConnectionEvent) => void) {
     this._config.click = func;
   }
 
-  public setTargetEndpoint(endpoint: ConnectionEndpointConfig) {
+  public set id(id: string) {
+    this.connection.id = id;
+    this._config.id = id;
+  }
+
+  public set targetEndpoint(endpoint: ConnectionEndpointConfig) {
     endpoint = { 
       ...this._diagram.config.targetEndpoint, 
       ...endpoint, 
@@ -82,7 +84,16 @@ export class DiagramConnection {
     }
   }
 
-  public setLabel(config: ConnectionLabelConfig) {
+  public get label(): ConnectionLabelConfig {
+    return this._config.label || {};
+  }
+
+  public set label(config: ConnectionLabelConfig) {
+    this._config.tooltip = {
+      ...this._config.label,
+      ...config,
+    };
+
     const overlay: LabelOverlay = this.connection.getOverlay(this.labelId);
     if(overlay) {
       overlay.setLabel(config.content);
@@ -104,7 +115,12 @@ export class DiagramConnection {
     }
   }
   
-  public setTooltip(config: ConnectionTooltipConfig) {
+  public set tooltip(config: ConnectionTooltipConfig) {
+    this._config.tooltip = {
+      ...this._config.tooltip,
+      ...config,
+    };
+
     const overlay: LabelOverlay = this.connection.getOverlay(this.tooltipId);
     if(overlay) {
       overlay.setLabel(config.content);
@@ -155,7 +171,7 @@ export class DiagramConnection {
     }
 
     this.connection.addClass('fs-diagram-connection');
-    this.connection.scope = this._config.name;
+    this.connection.scope = this._config.scope;
 
     this._bindClickEvent();
     this._bindTooltip();
@@ -166,13 +182,13 @@ export class DiagramConnection {
     }
 
     if (this._config.label) {
-      this.setLabel(this._config.label);
+      this.label = this._config.label;
     }
   }
 
   private _bindTargetEndpoint() {
     if(this._config.targetEndpoint) {
-      this.setTargetEndpoint(this._config.targetEndpoint);
+      this.targetEndpoint = this._config.targetEndpoint;
     }
   }
 
@@ -204,7 +220,7 @@ export class DiagramConnection {
         }
       });
  
-    this.setTooltip(this._config.tooltip);
+    this.tooltip = this._config.tooltip;
   }
 
   private _bindClickEvent() {

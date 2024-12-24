@@ -15,8 +15,9 @@ export interface ConnectionConfig {
   data?: any;
   connector?: ConnectorArchConfig | ConnectorElbowConfig | ConnectorCurveConfig | ConnectorStraightConfig,
   tooltip?: ConnectionTooltipConfig,
-  name?: string
-  targetEndpoint?: ConnectionEndpointConfig
+  scope?: string,
+  targetEndpoint?: ConnectionEndpointConfig,
+  id?: string,
 }
 
 export interface ConnectionLabelConfig {
