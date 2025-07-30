@@ -2,7 +2,7 @@
   "name": "@firestitch/diagram",
   "title": "Diagram",
   "description": "@firestitch/diagram",
-  "version": "18.0.15",
+  "version": "18.0.16",
   "repository": {
     "type": "git",
     "url": "https://github.com/Firestitch/ngx-diagram"
@@ -39,6 +39,7 @@
     "@angular/platform-browser": "^18.2.7",
     "@angular/platform-browser-dynamic": "^18.2.7",
     "@angular/router": "^18.2.7",
+    "@angular/material": "^18.2.7",
     "@firestitch/api": "^18.0.7",
     "@firestitch/clear": "^18.0.10",
     "@firestitch/common": "^18.0.1",
@@ -72,8 +73,6 @@
     "lodash-es": ">=4.17.11"
   },
   "dependencies": {
-    "@angular/material": "^18.2.7",
-    "@jsplumb/browser-ui": "^6.2.10",
-    "tslib": "^2.0.0"
+    "@jsplumb/browser-ui": "^6.2.10"
   }
 }
