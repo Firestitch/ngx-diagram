@@ -2,7 +2,8 @@ import { Directive, HostBinding, Input, OnInit } from '@angular/core';
 
 
 @Directive({
-  selector: '[fsDiagramSource]',
+    selector: '[fsDiagramSource]',
+    standalone: true,
 })
 export class FsDiagramSourceDirective implements OnInit {
 

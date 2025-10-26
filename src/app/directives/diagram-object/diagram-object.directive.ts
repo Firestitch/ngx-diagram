@@ -24,7 +24,8 @@ import { FsDiagramDirective } from '../diagram/diagram.directive';
 
 
 @Directive({
-  selector: '[fsDiagramObject]',
+    selector: '[fsDiagramObject]',
+    standalone: true,
 })
 export class FsDiagramObjectDirective implements OnDestroy, OnInit {
 

@@ -31,7 +31,8 @@ import { FsDiagramObjectDirective } from '../diagram-object';
 
 
 @Directive({
-  selector: '[fsDiagram]',
+    selector: '[fsDiagram]',
+    standalone: true,
 })
 export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
 
