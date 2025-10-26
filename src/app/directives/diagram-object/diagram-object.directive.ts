@@ -1,14 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostBinding,
-  HostListener,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-} from '@angular/core';
+import { Directive, ElementRef, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 
 import { guid } from '@firestitch/common';
 
@@ -28,6 +18,9 @@ import { FsDiagramDirective } from '../diagram/diagram.directive';
     standalone: true,
 })
 export class FsDiagramObjectDirective implements OnDestroy, OnInit {
+  private _element = inject(ElementRef);
+  private _diagram = inject(FsDiagramDirective);
+
 
   @Input() public data;
   @Input() public scale = 1;
@@ -64,11 +57,6 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   private _mouseDownEvent;
   private _mouseUpEvent;
   private _initalized$ = new BehaviorSubject<boolean>(false);
-
-  constructor(
-    private _element: ElementRef,
-    private _diagram: FsDiagramDirective,
-  ) {}
 
   @HostListener('click', ['$event'])
   public onClick(e) {

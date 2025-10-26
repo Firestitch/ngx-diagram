@@ -1,18 +1,4 @@
-import {
-  AfterViewInit,
-  ContentChildren,
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostBinding,
-  Input,
-  IterableDiffer,
-  IterableDiffers,
-  OnDestroy,
-  OnInit,
-  Output,
-  QueryList,
-} from '@angular/core';
+import { AfterViewInit, ContentChildren, Directive, ElementRef, EventEmitter, HostBinding, Input, IterableDiffer, IterableDiffers, OnDestroy, OnInit, Output, QueryList, inject } from '@angular/core';
 
 import { Observable, of, Subject } from 'rxjs';
 import { switchMap, takeUntil, tap } from 'rxjs/operators';
@@ -35,6 +21,9 @@ import { FsDiagramObjectDirective } from '../diagram-object';
     standalone: true,
 })
 export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
+  private _element = inject(ElementRef);
+  private _differs = inject(IterableDiffers);
+
 
   @HostBinding('class.fs-diagram') public classFsDiagram = true;
 
@@ -55,10 +44,7 @@ export class FsDiagramDirective implements AfterViewInit, OnInit, OnDestroy {
   private _destroy$ = new Subject<void>();
   private _jsPlumb: BrowserJsPlumbInstance;
 
-  constructor(
-    private _element: ElementRef,
-    private _differs: IterableDiffers,
-  ) {
+  constructor() {
     this._jsPlumb = newInstance({ container: this._element.nativeElement });
     this._differ = this._differs.find([]).create(null);
   }
