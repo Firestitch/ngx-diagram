@@ -14,13 +14,10 @@ import { FsDiagramDirective } from '../diagram/diagram.directive';
 
 
 @Directive({
-    selector: '[fsDiagramObject]',
-    standalone: true,
+  selector: '[fsDiagramObject]',
+  standalone: true,
 })
 export class FsDiagramObjectDirective implements OnDestroy, OnInit {
-  private _element = inject(ElementRef);
-  private _diagram = inject(FsDiagramDirective);
-
 
   @Input() public data;
   @Input() public scale = 1;
@@ -58,6 +55,8 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   private _mouseUpEvent;
   private _dragged = false;
   private _initalized$ = new BehaviorSubject<boolean>(false);
+  private _element = inject(ElementRef);
+  private _diagram = inject(FsDiagramDirective);
 
   @HostListener('mousedown', ['$event'])
   public onMouseDown(e) {
