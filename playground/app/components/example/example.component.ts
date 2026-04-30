@@ -23,13 +23,30 @@ import {
 import { Subject } from 'rxjs';
 
 import { random } from 'lodash-es';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { FsZoomPanModule } from '@firestitch/zoom-pan';
+import { FsDiagramDirective as FsDiagramDirective_1 } from '../../../../src/app/directives/diagram/diagram.directive';
+import { FsDiagramObjectDirective as FsDiagramObjectDirective_1 } from '../../../../src/app/directives/diagram-object/diagram-object.directive';
+import { FsMenuModule } from '@firestitch/menu';
+import { FsDiagramSourceDirective } from '../../../../src/app/directives/diagram-source/diagram-source.directive';
 
 
 @Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrls: ['./example.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'example',
+    templateUrl: './example.component.html',
+    styleUrls: ['./example.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [
+        MatIconButton,
+        MatIcon,
+        FsZoomPanModule,
+        FsDiagramDirective_1,
+        FsDiagramObjectDirective_1,
+        FsMenuModule,
+        FsDiagramSourceDirective,
+    ],
 })
 export class ExampleComponent implements OnInit, OnDestroy {
 
