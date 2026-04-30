@@ -62,6 +62,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   private _connectionDragSelector: ConnectionDragSelector;
   private _mouseDownEvent;
   private _mouseUpEvent;
+  private _dragged = false;
   private _initalized$ = new BehaviorSubject<boolean>(false);
 
   constructor(
@@ -71,18 +72,32 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
 
   @HostListener('click', ['$event'])
   public onClick(e) {
+    if (this._dragged) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      return;
+    }
+
+    if (!this._mouseDownEvent || !this._mouseUpEvent) {
+      return;
+    }
+
     const xDelta = Math.abs(this._mouseDownEvent.screenX - this._mouseUpEvent.screenX);
     const yDelta = Math.abs(this._mouseDownEvent.screenY - this._mouseUpEvent.screenY);
 
-    if (xDelta > 1 || yDelta > 1) {
+    if (xDelta > 4 || yDelta > 4) {
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
     }
   }
 
   @HostListener('mousedown', ['$event'])
   public onMouseDown(e) {
     this._mouseDownEvent = e;
+    this._dragged = false;
   }
 
   @HostListener('mouseup', ['$event'])
@@ -132,11 +147,12 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
     if (this.draggable) {
       this.jsPlumb.bind(EVENT_DRAG_START, (e: DragStartPayload) => {
         if(e.el.isEqualNode(this.el)) {
+          this._dragged = true;
           this.dragStart.emit({ event: e });
           this.jsPlumb.setZoom(this.scale);
           this._diagram.dragging = true;
         }
-      }); 
+      });
       
       this.jsPlumb.bind(EVENT_DRAG_STOP, (e: DragStopPayload) => {
         if(e.el.isEqualNode(this.el)) {
