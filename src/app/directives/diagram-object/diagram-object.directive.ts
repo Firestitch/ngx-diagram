@@ -59,8 +59,18 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   private _dragged = false;
   private _initalized$ = new BehaviorSubject<boolean>(false);
 
-  @HostListener('click', ['$event'])
-  public onClick(e) {
+  @HostListener('mousedown', ['$event'])
+  public onMouseDown(e) {
+    this._mouseDownEvent = e;
+    this._dragged = false;
+  }
+
+  @HostListener('mouseup', ['$event'])
+  public onMouseUp(e) {
+    this._mouseUpEvent = e;
+  }
+
+  private _onClickCapture = (e: MouseEvent) => {
     if (this._dragged) {
       e.preventDefault();
       e.stopPropagation();
@@ -81,18 +91,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
       e.stopPropagation();
       e.stopImmediatePropagation();
     }
-  }
-
-  @HostListener('mousedown', ['$event'])
-  public onMouseDown(e) {
-    this._mouseDownEvent = e;
-    this._dragged = false;
-  }
-
-  @HostListener('mouseup', ['$event'])
-  public onMouseUp(e) {
-    this._mouseUpEvent = e;
-  }
+  };
 
   public get initalized$(): Observable<boolean> {
     return this._initalized$.asObservable();
@@ -108,6 +107,7 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
 
   public ngOnInit() {
     this._diagram.diagramObjects.set(this.data, this);
+    this.el.addEventListener('click', this._onClickCapture, true);
   }
 
   public get jsPlumb(): BrowserJsPlumbInstance {
@@ -123,6 +123,8 @@ export class FsDiagramObjectDirective implements OnDestroy, OnInit {
   }
 
   public ngOnDestroy() {
+    this.el.removeEventListener('click', this._onClickCapture, true);
+
     this._diagram.getObjectConnections(this.data)
       .forEach((conn: DiagramConnection) => {
         conn.disconnect();
